@@ -89,7 +89,17 @@ function App() {
         })
     });
     socketRef.current.on("offer",async ({offer,from})=>{
-      peerRef.current.setRemoteDescription(offer);
+
+      peerRef.current.onicecandidate = (e) => {
+          if (e.candidate) {
+              socketRef.current.emit("candidate", {
+                  candidate: e.candidate,
+                  target: from
+              });
+          }
+      };
+
+      await peerRef.current.setRemoteDescription(offer);
 
        const answer = await peerRef.current.createAnswer();
        await peerRef.current.setLocalDescription(answer);
@@ -112,6 +122,32 @@ function App() {
         console.error("Failed to add ICE candidate:", error);
       }
     });
+
+
+
+
+
+    peerRef.current.onconnectionstatechange = () => {
+        console.log(
+            "CONNECTION:",
+            peerRef.current.connectionState
+        );
+    };
+
+    peerRef.current.oniceconnectionstatechange = () => {
+        console.log(
+            "ICE:",
+            peerRef.current.iceConnectionState
+        );
+    };
+    peerRef.current.ontrack = (e) => {
+        console.log("🔥 REMOTE TRACK:", e.streams[0]);
+
+        remoteVideoRef.current.srcObject = e.streams[0];
+    };
+
+
+
 
     socketRef.current.on("disconnect",()=>{
       alert(`disconnect${socketRef.current.id}`);
