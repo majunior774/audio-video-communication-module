@@ -1,4 +1,4 @@
-import React from 'react';
+
 import {useEffect,useRef} from 'react';
 import './App.css';
 import {io} from "socket.io-client";
@@ -81,6 +81,27 @@ function App() {
       }
       pendingCandidatesRef.current = [];
     };
+    const waitForIceGatheringComplete = () => new Promise((resolve) => {
+      if (peerRef.current.iceGatheringState === "complete") {
+        resolve();
+        return;
+      }
+
+      const onIceGatheringStateChange = () => {
+        if (peerRef.current.iceGatheringState === "complete") {
+          peerRef.current.removeEventListener(
+            "icegatheringstatechange",
+            onIceGatheringStateChange
+          );
+          resolve();
+        }
+      };
+
+      peerRef.current.addEventListener(
+        "icegatheringstatechange",
+        onIceGatheringStateChange
+      );
+    });
 
     socketRef.current.on("connect",()=>{
       alert(`connected${socketRef.current.id}`);
@@ -112,6 +133,7 @@ function App() {
             //offering 
             const offer = await peerRef.current.createOffer();
             await peerRef.current.setLocalDescription(offer);
+            await waitForIceGatheringComplete();
             
             socketRef.current.emit("offer",{
               offer : peerRef.current.localDescription,
@@ -140,6 +162,7 @@ function App() {
 
        const answer = await peerRef.current.createAnswer();
        await peerRef.current.setLocalDescription(answer);
+       await waitForIceGatheringComplete();
 
       socketRef.current.emit("answer",{
         answer:peerRef.current.localDescription,
