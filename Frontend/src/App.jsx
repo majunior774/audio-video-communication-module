@@ -22,6 +22,7 @@ function App() {
   //video audio connection
   useEffect(() => {
       let cancelled = false;
+      const localVideo = localVideoRef.current;
 
       const startCamera = async () => {
 
@@ -34,7 +35,9 @@ function App() {
             return;
           }
           localStreamRef.current = stream;
-          localVideoRef.current.srcObject = stream;
+          if (localVideo) {
+            localVideo.srcObject = stream;
+          }
 
           // adding local video on RTC peer 
           peerRef.current = new RTCPeerConnection({
@@ -55,7 +58,10 @@ function App() {
 
       return () => {
           cancelled = true;
-          localVideoRef.current?.srcObject?.getTracks().forEach((track)=>track.stop());
+          localVideo?.srcObject?.getTracks().forEach((track)=>track.stop());
+          if (localVideo) {
+            localVideo.srcObject = null;
+          }
           localStreamRef.current = null;
           peerRef.current?.close();
           peerRef.current = null;
@@ -124,28 +130,6 @@ function App() {
       return peerRef.current;
     };
     configurePeerConnection(peerRef.current);
-    const waitForIceGatheringComplete = () => new Promise((resolve) => {
-      if (peerRef.current.iceGatheringState === "complete") {
-        resolve();
-        return;
-      }
-
-      const onIceGatheringStateChange = () => {
-        if (peerRef.current.iceGatheringState === "complete") {
-          peerRef.current.removeEventListener(
-            "icegatheringstatechange",
-            onIceGatheringStateChange
-          );
-          resolve();
-        }
-      };
-
-      peerRef.current.addEventListener(
-        "icegatheringstatechange",
-        onIceGatheringStateChange
-      );
-    });
-
     socketRef.current.on("connect",()=>{
       console.log(`Connected: ${socketRef.current.id}`);
       socketRef.current.emit("join-room","abc123");
@@ -181,10 +165,9 @@ function App() {
             //offering 
             const offer = await peer.createOffer();
             await peer.setLocalDescription(offer);
-            await waitForIceGatheringComplete();
             
             socketRef.current.emit("offer",{
-              offer : peer.localDescription,
+              offer,
               target : Id
             });
 
@@ -204,10 +187,9 @@ function App() {
 
        const answer = await peer.createAnswer();
        await peer.setLocalDescription(answer);
-       await waitForIceGatheringComplete();
 
       socketRef.current.emit("answer",{
-        answer:peer.localDescription,
+        answer,
         target:from
       });
     })
@@ -252,7 +234,7 @@ function App() {
       socketRef.current?.disconnect();
       socketRef.current = null;
     };
-  }, [])
+  }, [serverUrl])
 
 
   
