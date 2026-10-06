@@ -1,11 +1,15 @@
 
-import {useEffect,useRef} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import './App.css';
 import {io} from "socket.io-client";
 
 
 
 function App() {
+  const [cameraFacingMode, setCameraFacingMode] = useState('user');
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraSwitching, setCameraSwitching] = useState(false);
+  const [cameraError, setCameraError] = useState('');
   //DECLARATIONS
   // signalling 
   const serverUrl = import.meta.env.VITE_SERVER_URL;
@@ -18,6 +22,7 @@ function App() {
   const remoteUserRef = useRef(null);
   const mediaReadyRef = useRef(null);
   const pendingCandidatesRef = useRef([]);
+  const cameraSwitchInProgressRef = useRef(false);
 
   //video audio connection
   useEffect(() => {
@@ -27,7 +32,7 @@ function App() {
       const startCamera = async () => {
 
           const stream = await navigator.mediaDevices.getUserMedia({
-              video: true,
+              video: { facingMode: { ideal: 'user' } },
               audio: true
           });
           if (cancelled) {
@@ -35,6 +40,7 @@ function App() {
             return;
           }
           localStreamRef.current = stream;
+          setCameraReady(true);
           if (localVideo) {
             localVideo.srcObject = stream;
           }
@@ -70,6 +76,57 @@ function App() {
       };
 
   }, []);
+
+  const switchCamera = async () => {
+    if (cameraSwitchInProgressRef.current) return;
+
+    const localStream = localStreamRef.current;
+    const currentVideoTrack = localStream?.getVideoTracks()[0];
+    const nextFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
+    if (!localStream || !currentVideoTrack) {
+      setCameraError('The camera is not ready yet.');
+      return;
+    }
+
+    cameraSwitchInProgressRef.current = true;
+    setCameraSwitching(true);
+    setCameraError('');
+
+    let nextVideoTrack;
+    try {
+      const nextStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { exact: nextFacingMode } },
+        audio: false
+      });
+      nextVideoTrack = nextStream.getVideoTracks()[0];
+      if (!nextVideoTrack) {
+        throw new Error('No video track was returned by the selected camera.');
+      }
+
+      const videoSender = peerRef.current
+        ?.getSenders()
+        .find((sender) => sender.track?.kind === 'video');
+      if (!videoSender) {
+        throw new Error('The video connection is not ready.');
+      }
+
+      await videoSender.replaceTrack(nextVideoTrack);
+      localStream.removeTrack(currentVideoTrack);
+      localStream.addTrack(nextVideoTrack);
+      currentVideoTrack.stop();
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = localStream;
+      }
+      setCameraFacingMode(nextFacingMode);
+    } catch (error) {
+      nextVideoTrack?.stop();
+      console.error('Failed to switch camera:', error);
+      setCameraError(`Unable to switch camera: ${error.message}`);
+    } finally {
+      cameraSwitchInProgressRef.current = false;
+      setCameraSwitching(false);
+    }
+  };
 
   // signalling connection
   useEffect(() => {
@@ -249,8 +306,24 @@ function App() {
             autoPlay
             controls
             muted
-            className='scale-x-[-1]'
+            playsInline
+            className={cameraFacingMode === 'user' ? 'scale-x-[-1]' : ''}
         />
+        <button
+            type="button"
+            onClick={switchCamera}
+            disabled={!cameraReady || cameraSwitching}
+            className="mt-3 rounded bg-blue-600 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+            {cameraSwitching
+              ? 'Switching camera...'
+              : `Switch to ${cameraFacingMode === 'user' ? 'rear' : 'front'} camera`}
+        </button>
+        {cameraError && (
+          <p role="alert" className="mt-2 text-sm text-red-400">
+            {cameraError}
+          </p>
+        )}
         <video
             ref={remoteVideoRef}
             autoPlay
