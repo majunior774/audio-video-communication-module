@@ -104,7 +104,7 @@ function App() {
     });
 
     socketRef.current.on("connect",()=>{
-      alert(`connected${socketRef.current.id}`);
+      console.log(`Connected: ${socketRef.current.id}`);
       socketRef.current.emit("join-room","abc123");
     })
     socketRef.current.on("connect_error",(error)=>{
@@ -112,7 +112,7 @@ function App() {
     })
 
     socketRef.current.on("user-joined", (userId) => {
-        alert(`new user joined ${userId}`);
+        console.log(`New user joined: ${userId}`);
     });
     
     // webRtc connection
@@ -215,7 +215,7 @@ function App() {
 
 
     socketRef.current.on("disconnect",()=>{
-      alert(`disconnect${socketRef.current.id}`);
+      console.log(`Disconnected: ${socketRef.current.id}`);
     })
 
       })
