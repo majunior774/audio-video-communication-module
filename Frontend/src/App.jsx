@@ -14,9 +14,12 @@ function App() {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const peerRef = useRef(null);
+  const mediaReadyRef = useRef(null);
+  const pendingCandidatesRef = useRef([]);
 
   //video audio connection
   useEffect(() => {
+      let cancelled = false;
 
       const startCamera = async () => {
 
@@ -24,10 +27,19 @@ function App() {
               video: true,
               audio: true
           });
+          if (cancelled) {
+            stream.getTracks().forEach((track)=>track.stop());
+            return;
+          }
           localVideoRef.current.srcObject = stream;
 
           // adding local video on RTC peer 
-          peerRef.current = new RTCPeerConnection();
+          peerRef.current = new RTCPeerConnection({
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+            ],
+          });
+          
           stream.getTracks().forEach((tracks)=>{
             peerRef.current.addTrack(tracks,stream);
           })
@@ -36,15 +48,39 @@ function App() {
           }
       };
 
-      startCamera();
+      mediaReadyRef.current = startCamera();
+
+      return () => {
+          cancelled = true;
+          localVideoRef.current?.srcObject?.getTracks().forEach((track)=>track.stop());
+          peerRef.current?.close();
+          peerRef.current = null;
+          pendingCandidatesRef.current = [];
+      };
 
   }, []);
 
   // signalling connection
   useEffect(() => {
+    let cancelled = false;
+
+    mediaReadyRef.current
+      .then(() => {
+    if (cancelled) return;
+
     socketRef.current = io(serverUrl, {
         transports: ["websocket"]
     });
+    const addPendingCandidates = async () => {
+      for (const candidate of pendingCandidatesRef.current) {
+        try {
+          await peerRef.current.addIceCandidate(candidate);
+        } catch (error) {
+          console.error("Failed to add queued ICE candidate:", error);
+        }
+      }
+      pendingCandidatesRef.current = [];
+    };
 
     socketRef.current.on("connect",()=>{
       alert(`connected${socketRef.current.id}`);
@@ -100,6 +136,7 @@ function App() {
       };
 
       await peerRef.current.setRemoteDescription(offer);
+      await addPendingCandidates();
 
        const answer = await peerRef.current.createAnswer();
        await peerRef.current.setLocalDescription(answer);
@@ -109,14 +146,19 @@ function App() {
         target:from
       });
     })
-    socketRef.current.on("answer",({answer,from})=>{
-      peerRef.current.setRemoteDescription(answer);
+    socketRef.current.on("answer",async ({answer,from})=>{
+      await peerRef.current.setRemoteDescription(answer);
+      await addPendingCandidates();
       console.log("connection done with :", from);
     })
     //candidate validation
     socketRef.current.on("candidate", async ({ candidate, from }) => {
       try {
-        await peerRef.current.addIceCandidate(candidate);
+        if (peerRef.current.remoteDescription) {
+          await peerRef.current.addIceCandidate(candidate);
+        } else {
+          pendingCandidatesRef.current.push(candidate);
+        }
         console.log(`talking with ${from} on`, candidate);
       }catch (error) {
         console.error("Failed to add ICE candidate:", error);
@@ -153,7 +195,16 @@ function App() {
       alert(`disconnect${socketRef.current.id}`);
     })
 
-    return () => socketRef.current.disconnect();
+      })
+      .catch((error) => {
+        console.error("Failed to initialize media before signaling:", error);
+      });
+
+    return () => {
+      cancelled = true;
+      socketRef.current?.disconnect();
+      socketRef.current = null;
+    };
   }, [])
 
 
