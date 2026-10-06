@@ -54,6 +54,14 @@ io.on("connection",(socket)=>{
         io.to(target).emit("candidate",{candidate,from:socket.id});
     })
 
+    socket.on("disconnecting",()=>{
+        for (const roomId of socket.rooms) {
+            if (roomId !== socket.id) {
+                socket.to(roomId).emit("user-left",socket.id);
+            }
+        }
+    })
+
     socket.on("disconnect",()=>{
         console.log(`Disconnected: ${socket.id}`);
     })

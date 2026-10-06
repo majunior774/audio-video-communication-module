@@ -14,6 +14,8 @@ function App() {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const peerRef = useRef(null);
+  const localStreamRef = useRef(null);
+  const remoteUserRef = useRef(null);
   const mediaReadyRef = useRef(null);
   const pendingCandidatesRef = useRef([]);
 
@@ -31,6 +33,7 @@ function App() {
             stream.getTracks().forEach((track)=>track.stop());
             return;
           }
+          localStreamRef.current = stream;
           localVideoRef.current.srcObject = stream;
 
           // adding local video on RTC peer 
@@ -53,8 +56,10 @@ function App() {
       return () => {
           cancelled = true;
           localVideoRef.current?.srcObject?.getTracks().forEach((track)=>track.stop());
+          localStreamRef.current = null;
           peerRef.current?.close();
           peerRef.current = null;
+          remoteUserRef.current = null;
           pendingCandidatesRef.current = [];
       };
 
@@ -81,6 +86,44 @@ function App() {
       }
       pendingCandidatesRef.current = [];
     };
+    const configurePeerConnection = (peer) => {
+      peer.onicecandidate = (e) => {
+        if (e.candidate && remoteUserRef.current) {
+          socketRef.current.emit("candidate", {
+            candidate: e.candidate,
+            target: remoteUserRef.current
+          });
+        }
+      };
+      peer.ontrack = (e) => {
+        console.log("🔥 REMOTE TRACK:", e.streams[0]);
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = e.streams[0];
+        }
+      };
+      peer.onconnectionstatechange = () => {
+        console.log("CONNECTION:", peer.connectionState);
+      };
+      peer.oniceconnectionstatechange = () => {
+        console.log("ICE:", peer.iceConnectionState);
+      };
+    };
+    const ensurePeerConnection = () => {
+      if (!peerRef.current || peerRef.current.signalingState === "closed") {
+        const peer = new RTCPeerConnection({
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+          ],
+        });
+        localStreamRef.current.getTracks().forEach((track) => {
+          peer.addTrack(track, localStreamRef.current);
+        });
+        peerRef.current = peer;
+        configurePeerConnection(peer);
+      }
+      return peerRef.current;
+    };
+    configurePeerConnection(peerRef.current);
     const waitForIceGatheringComplete = () => new Promise((resolve) => {
       if (peerRef.current.iceGatheringState === "complete") {
         resolve();
@@ -114,6 +157,18 @@ function App() {
     socketRef.current.on("user-joined", (userId) => {
         console.log(`New user joined: ${userId}`);
     });
+    socketRef.current.on("user-left", (userId) => {
+      console.log(`User left: ${userId}`);
+      if (remoteUserRef.current === userId) {
+        peerRef.current?.close();
+        peerRef.current = null;
+        remoteUserRef.current = null;
+        pendingCandidatesRef.current = [];
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = null;
+        }
+      }
+    });
     
     // webRtc connection
 
@@ -121,22 +176,15 @@ function App() {
       console.log("Existing users:", users);
       users.forEach(async (Id)=>{
           try {
-            // ice candidates finding
-            peerRef.current.onicecandidate = (e)=>{
-              if(e.candidate){
-                socketRef.current.emit("candidate",{
-                  candidate:e.candidate,
-                  target:Id
-                })
-              }
-            }
+            remoteUserRef.current = Id;
+            const peer = ensurePeerConnection();
             //offering 
-            const offer = await peerRef.current.createOffer();
-            await peerRef.current.setLocalDescription(offer);
+            const offer = await peer.createOffer();
+            await peer.setLocalDescription(offer);
             await waitForIceGatheringComplete();
             
             socketRef.current.emit("offer",{
-              offer : peerRef.current.localDescription,
+              offer : peer.localDescription,
               target : Id
             });
 
@@ -148,37 +196,35 @@ function App() {
     });
     socketRef.current.on("offer",async ({offer,from})=>{
 
-      peerRef.current.onicecandidate = (e) => {
-          if (e.candidate) {
-              socketRef.current.emit("candidate", {
-                  candidate: e.candidate,
-                  target: from
-              });
-          }
-      };
+      remoteUserRef.current = from;
+      const peer = ensurePeerConnection();
 
-      await peerRef.current.setRemoteDescription(offer);
+      await peer.setRemoteDescription(offer);
       await addPendingCandidates();
 
-       const answer = await peerRef.current.createAnswer();
-       await peerRef.current.setLocalDescription(answer);
+       const answer = await peer.createAnswer();
+       await peer.setLocalDescription(answer);
        await waitForIceGatheringComplete();
 
       socketRef.current.emit("answer",{
-        answer:peerRef.current.localDescription,
+        answer:peer.localDescription,
         target:from
       });
     })
     socketRef.current.on("answer",async ({answer,from})=>{
-      await peerRef.current.setRemoteDescription(answer);
+      remoteUserRef.current = from;
+      const peer = ensurePeerConnection();
+      await peer.setRemoteDescription(answer);
       await addPendingCandidates();
       console.log("connection done with :", from);
     })
     //candidate validation
     socketRef.current.on("candidate", async ({ candidate, from }) => {
       try {
-        if (peerRef.current.remoteDescription) {
-          await peerRef.current.addIceCandidate(candidate);
+        remoteUserRef.current = from;
+        const peer = ensurePeerConnection();
+        if (peer.remoteDescription) {
+          await peer.addIceCandidate(candidate);
         } else {
           pendingCandidatesRef.current.push(candidate);
         }
@@ -188,28 +234,6 @@ function App() {
       }
     });
 
-
-
-
-
-    peerRef.current.onconnectionstatechange = () => {
-        console.log(
-            "CONNECTION:",
-            peerRef.current.connectionState
-        );
-    };
-
-    peerRef.current.oniceconnectionstatechange = () => {
-        console.log(
-            "ICE:",
-            peerRef.current.iceConnectionState
-        );
-    };
-    peerRef.current.ontrack = (e) => {
-        console.log("🔥 REMOTE TRACK:", e.streams[0]);
-
-        remoteVideoRef.current.srcObject = e.streams[0];
-    };
 
 
 
