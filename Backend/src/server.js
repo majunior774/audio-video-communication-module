@@ -75,15 +75,16 @@ app.get("/", (req, res) => {
     res.send("Backend is running 🚀");
 });
 
+server.listen(process.env.PORT,"0.0.0.0", () => {
+    console.log(`Server running on port http://localhost:${process.env.PORT}`);
+    console.log(`-----------------------------------`);
+    
+});
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log("MongoDB connected");
-        server.listen(process.env.PORT,"0.0.0.0", () => {
-            console.log(`Server running on port http://localhost:${process.env.PORT}`);
-            console.log(`-----------------------------------`);
-            
-        });
+        
     })
     .catch((err) => {
         console.error("MongoDB connection failed:", err);
