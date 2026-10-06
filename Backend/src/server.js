@@ -41,12 +41,21 @@ io.on("connection",(socket)=>{
 
         console.log(`user:${socket.id} is in room ${roomId}`);
     })
-    socket.on("existing",(userid)=>{
-        console.log(`existing user ${userid}`);        
+    //webRTC set up
+    socket.on("offer",({offer,target})=>{
+        io.to(target).emit("offer",{offer,from:socket.id})
+    })
+    socket.on("answer",({answer,target})=>{
+        io.to(target).emit("answer",{answer,from:socket.id})
+    })
+
+    //ice candidates
+    socket.on("candidate",({candidate,target})=>{
+        io.to(target).emit("candidate",{candidate,from:socket.id});
     })
 
     socket.on("disconnect",()=>{
-        console.log(`Disconnnected: ${socket.id}`);
+        console.log(`Disconnected: ${socket.id}`);
     })
 })
 
@@ -62,8 +71,10 @@ app.get("/", (req, res) => {
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log("MongoDB connected");
-        server.listen(process.env.PORT, () => {
+        server.listen(process.env.PORT,"0.0.0.0", () => {
             console.log(`Server running on port http://localhost:${process.env.PORT}`);
+            console.log(`-----------------------------------`);
+            
         });
     })
     .catch((err) => {
