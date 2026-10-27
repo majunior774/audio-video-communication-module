@@ -49,35 +49,25 @@ export default function VideoCall({
               </div>
             ))}
           </div>
-        ) : (
-          /* no one else — show local full-screen */
-          <div className="solo-view">
-            <video
-              ref={localVideoRef}
-              autoPlay
-              muted
-              playsInline
-              className={cameraFacingMode === 'user' ? 'mirror' : ''}
-            />
-            <p className="solo-hint">Waiting for others to join…</p>
-          </div>
-        )}
+        ) : null}
 
-        {/* ── local pip (only when remotes exist) ── */}
-        {hasRemote && (
-          <div
-            className={`local-pip ${localExpanded ? 'local-pip--lg' : ''}`}
-            onClick={() => setLocalExpanded((p) => !p)}
-          >
-            <video
-              ref={localVideoRef}
-              autoPlay
-              muted
-              playsInline
-              className={cameraFacingMode === 'user' ? 'mirror' : ''}
-            />
-          </div>
-        )}
+        <div
+          className={
+            hasRemote
+              ? `local-pip ${localExpanded ? 'local-pip--lg' : ''}`
+              : 'solo-view'
+          }
+          onClick={hasRemote ? () => setLocalExpanded((p) => !p) : undefined}
+        >
+          <video
+            ref={localVideoRef}
+            autoPlay
+            muted
+            playsInline
+            className={cameraFacingMode === 'user' ? 'mirror' : ''}
+          />
+          {!hasRemote && <p className="solo-hint">Waiting for others to join…</p>}
+        </div>
       </div>
 
       {/* ── controls ── */}
