@@ -1,8 +1,30 @@
 
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
 import './App.css';
 import {io} from "socket.io-client";
 import VideoCall from './pages/video_call';
+
+const waitForStablePeer = (peer) => {
+  if (peer.signalingState === 'stable') return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      peer.removeEventListener('signalingstatechange', onStateChange);
+      reject(new Error('Timed out waiting for the peer connection to become stable.'));
+    }, 10000);
+    const onStateChange = () => {
+      if (peer.signalingState === 'stable') {
+        window.clearTimeout(timeoutId);
+        peer.removeEventListener('signalingstatechange', onStateChange);
+        resolve();
+      } else if (peer.signalingState === 'closed') {
+        window.clearTimeout(timeoutId);
+        peer.removeEventListener('signalingstatechange', onStateChange);
+        reject(new Error('The peer connection closed during screen-share negotiation.'));
+      }
+    };
+    peer.addEventListener('signalingstatechange', onStateChange);
+  });
+};
 
 const turnUrls = import.meta.env.VITE_TURN_URLS
   ?.split(',')
@@ -23,6 +45,24 @@ const iceServers = [
     ? [{ urls: turnUrls, username: turnUsername, credential: turnCredential }]
     : []),
 ];
+
+function capSenderBitrate(sender, maxBitrate) {
+  const parameters = sender.getParameters();
+  if (!parameters.encodings?.length) {
+    throw new Error('The sender has no bitrate encoding to configure.');
+  }
+  const [encoding, ...otherEncodings] = parameters.encodings ?? [];
+  parameters.encodings = [
+    { ...encoding, maxBitrate },
+    ...otherEncodings,
+  ];
+  return sender.setParameters(parameters);
+}
+
+function tryCapSenderBitrate(sender, maxBitrate) {
+  if (!sender?.track) return Promise.resolve();
+  return Promise.resolve().then(() => capSenderBitrate(sender, maxBitrate));
+}
 
 console.info('WebRTC ICE configuration:', {
   turnConfigured: iceServers.length > 1,
@@ -80,7 +120,9 @@ function App() {
   const serverUrl = import.meta.env.DEV
     ? window.location.origin
     : import.meta.env.VITE_SERVER_URL;
+  const roomId = new URLSearchParams(window.location.search).get('room')?.trim() || 'abc123';
   const socketRef=useRef(null);
+  const [socket, setSocket] = useState(null);
   //video audio 
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
@@ -89,15 +131,72 @@ function App() {
   //new
   const pendingCandidatesRef = useRef(new Map);
   const peersRef = useRef(new Map());
+  const screenShareSendersRef = useRef(new Map());
+  const screenNegotiationQueuesRef = useRef(new Map());
+  const makingOfferRef = useRef(new Set());
+  const screenShareStreamRef = useRef(null);
+  const screenShareEndedHandlerRef = useRef(null);
+  const screenSharesRef = useRef(new Map());
+  const roomIdRef = useRef(roomId);
   const [remoteStreams,setRemoteStreams]=useState([]);
+  const [screenShareStream, setScreenShareStream] = useState(null);
 
-  
+  const publishScreenShareState = useCallback((streamId = screenShareStreamRef.current?.id) => {
+    if (!streamId) return;
+    socketRef.current?.emit('screen-share:state', {
+      roomId: roomIdRef.current,
+      sharing: true,
+      streamId,
+      trackMids: Object.fromEntries(
+        [...screenShareSendersRef.current.entries()].map(([peerId, senders]) => [
+          peerId,
+          {
+            video: senders.videoTransceiver?.mid ?? null,
+            audio: senders.audioTransceiver?.mid ?? null,
+          },
+        ])
+      ),
+    });
+  }, []);
+
+  const renegotiateScreenPeer = useCallback((userId, peer) => {
+    const previous = screenNegotiationQueuesRef.current.get(userId) ?? Promise.resolve();
+    const negotiation = previous
+      .catch((error) => {
+        console.error(`Previous screen-share negotiation with ${userId} failed:`, error);
+      })
+      .then(async () => {
+        await waitForStablePeer(peer);
+        if (peer.signalingState === 'closed') return;
+        makingOfferRef.current.add(userId);
+        try {
+          const offer = await peer.createOffer();
+          await peer.setLocalDescription(offer);
+          socketRef.current?.emit('offer', {
+            offer,
+            target: userId,
+          });
+          publishScreenShareState();
+        } finally {
+          makingOfferRef.current.delete(userId);
+        }
+      });
+    screenNegotiationQueuesRef.current.set(userId, negotiation);
+    return negotiation.finally(() => {
+      if (screenNegotiationQueuesRef.current.get(userId) === negotiation) {
+        screenNegotiationQueuesRef.current.delete(userId);
+      }
+    });
+  }, [publishScreenShareState]);
+
   //video audio connection
   useEffect(() => {
       let cancelled = false;
       const localVideo = localVideoRef.current;
       const peers = peersRef.current;
       const pendingCandidates = pendingCandidatesRef.current;
+      const screenShareSenders = screenShareSendersRef.current;
+      const screenShares = screenSharesRef.current;
 
       const startCamera = async () => {
 
@@ -120,6 +219,8 @@ function App() {
 
       return () => {
           cancelled = true;
+          screenShareStreamRef.current?.getTracks().forEach((track) => track.stop());
+          screenShareStreamRef.current = null;
           localVideo?.srcObject?.getTracks().forEach((track)=>track.stop());
           if (localVideo) {
             localVideo.srcObject = null;
@@ -130,10 +231,160 @@ function App() {
           }
           peers.clear();
           pendingCandidates.clear();
+          screenShareSenders.clear();
+          screenShares.clear();
           setRemoteStreams([]);
       };
 
   }, []);
+
+  const stopScreenShare = useCallback(async () => {
+    const stream = screenShareStreamRef.current;
+    if (!stream) return;
+    const videoTrack = stream.getVideoTracks()[0];
+    if (videoTrack && screenShareEndedHandlerRef.current) {
+      videoTrack.removeEventListener('ended', screenShareEndedHandlerRef.current);
+    }
+    screenShareEndedHandlerRef.current = null;
+
+    const peers = [...peersRef.current.entries()];
+    const replaceResults = await Promise.allSettled(peers.map(async ([userId, peer]) => {
+      const senders = screenShareSendersRef.current.get(userId);
+      if (!senders) return;
+      const tracks = [];
+      if (senders.video) tracks.push(senders.video.replaceTrack(null));
+      if (senders.audio) tracks.push(senders.audio.replaceTrack(null));
+      await Promise.all(tracks);
+      if (senders.videoTransceiver) senders.videoTransceiver.direction = 'recvonly';
+      if (senders.audioTransceiver) senders.audioTransceiver.direction = 'recvonly';
+      await renegotiateScreenPeer(userId, peer);
+    }));
+
+    screenShareStreamRef.current = null;
+    stream.getTracks().forEach((track) => track.stop());
+    setScreenShareStream(null);
+    socketRef.current?.emit('screen-share:state', {
+      roomId: roomIdRef.current,
+      sharing: false,
+    });
+
+    const failed = replaceResults.find((result) => result.status === 'rejected');
+    if (failed) {
+      throw new Error(
+        `Could not stop sending a screen-share track: ${failed.reason?.message ?? failed.reason}`,
+        { cause: failed.reason }
+      );
+    }
+  }, [renegotiateScreenPeer]);
+
+  const startScreenShare = useCallback(async ({
+    width,
+    height,
+    frameRate,
+    includeAudio,
+  }) => {
+    if (!navigator.mediaDevices?.getDisplayMedia) {
+      throw new Error('Screen sharing requires a supported browser and a secure (HTTPS) page.');
+    }
+
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: {
+        width: { ideal: width },
+        height: { ideal: height },
+        frameRate: { ideal: frameRate },
+      },
+      audio: includeAudio,
+    });
+    const videoTrack = stream.getVideoTracks()[0];
+    if (!videoTrack) {
+      stream.getTracks().forEach((track) => track.stop());
+      throw new Error('The selected source did not provide a video track.');
+    }
+
+    const audioTrack = stream.getAudioTracks()[0] ?? null;
+    videoTrack.contentHint = 'detail';
+    screenShareStreamRef.current = stream;
+    try {
+      const negotiations = [];
+      for (const [userId, peer] of peersRef.current) {
+        let senders = screenShareSendersRef.current.get(userId);
+        if (!senders) {
+          senders = {
+            video: null,
+            audio: null,
+            videoTransceiver: null,
+            audioTransceiver: null,
+            cameraSenders: new Set(),
+          };
+          screenShareSendersRef.current.set(userId, senders);
+        }
+
+        if (senders.video) {
+          await senders.video.replaceTrack(videoTrack);
+          if (senders.videoTransceiver) senders.videoTransceiver.direction = 'sendrecv';
+        } else {
+          senders.video = peer.addTrack(videoTrack, stream);
+          senders.videoTransceiver = peer.getTransceivers().find(
+            (transceiver) => transceiver.sender === senders.video
+          );
+        }
+
+        if (audioTrack) {
+          if (senders.audio) {
+            await senders.audio.replaceTrack(audioTrack);
+            if (senders.audioTransceiver) senders.audioTransceiver.direction = 'sendrecv';
+          } else {
+            senders.audio = peer.addTrack(audioTrack, stream);
+            senders.audioTransceiver = peer.getTransceivers().find(
+              (transceiver) => transceiver.sender === senders.audio
+            );
+          }
+        }
+        negotiations.push(renegotiateScreenPeer(userId, peer));
+      }
+      await Promise.all(negotiations);
+    } catch (error) {
+      screenShareStreamRef.current = null;
+      stream.getTracks().forEach((track) => track.stop());
+      await Promise.allSettled(
+        [...screenShareSendersRef.current.values()].flatMap((senders) => [
+          senders.video?.replaceTrack(null),
+          senders.audio?.replaceTrack(null),
+        ].filter(Boolean))
+      );
+      throw new Error(`Could not send the screen share: ${error.message}`, { cause: error });
+    }
+
+    const bitrateResults = await Promise.allSettled(
+      [...screenShareSendersRef.current.values()].flatMap(({ video, audio }) => [
+        tryCapSenderBitrate(video, 2_000_000),
+        tryCapSenderBitrate(audio, 128_000),
+      ])
+    );
+    const bitrateFailure = bitrateResults.find((result) => result.status === 'rejected');
+    const bitrateWarning = bitrateFailure
+      ? 'Screen sharing is active, but this browser could not apply the bandwidth limit.'
+      : '';
+    if (bitrateFailure) {
+      console.warn('Could not limit screen-share bandwidth:', bitrateFailure.reason);
+    }
+
+    setScreenShareStream(stream);
+    publishScreenShareState(stream.id);
+
+    const onEnded = () => {
+      stopScreenShare().catch((error) => {
+        console.error('Failed to stop a screen share after the source ended:', error);
+      });
+    };
+    screenShareEndedHandlerRef.current = onEnded;
+    videoTrack.addEventListener('ended', onEnded, { once: true });
+
+    if (includeAudio && !audioTrack) {
+      return 'The selected source did not provide shareable audio. Screen video is still being shared.';
+    }
+    return bitrateWarning;
+  }, [publishScreenShareState, renegotiateScreenPeer, stopScreenShare]);
 
   //camera switching
   
@@ -198,6 +449,9 @@ function App() {
   // signalling connection
   useEffect(() => {
     let cancelled = false;
+    roomIdRef.current = roomId;
+    const screenShareSenders = screenShareSendersRef.current;
+    const screenShares = screenSharesRef.current;
 
     mediaReadyRef.current
       .then(() => {
@@ -206,6 +460,7 @@ function App() {
     socketRef.current = io(serverUrl, {
         transports: ["websocket"]
     });
+    setSocket(socketRef.current);
 
     //functiionss
 
@@ -220,6 +475,37 @@ function App() {
         }
       }
       pendingCandidatesRef.current.delete(userId);
+    };
+
+    const constrainScreenShareSenders = async (userId) => {
+      if (!screenShareStreamRef.current) return;
+      const senders = screenShareSendersRef.current.get(userId);
+      if (!senders) return;
+      const results = await Promise.allSettled([
+        tryCapSenderBitrate(senders.video, 2_000_000),
+        tryCapSenderBitrate(senders.audio, 128_000),
+      ]);
+      for (const result of results) {
+        if (result.status === 'rejected') {
+          console.warn(`Could not limit screen-share bandwidth for ${userId}:`, result.reason);
+        }
+      }
+    };
+
+    const refreshScreenSenders = (userId, peer) => {
+      const senders = screenShareSendersRef.current.get(userId);
+      if (!senders) return;
+      const candidates = peer.getTransceivers().filter(
+        (transceiver) => !senders.cameraSenders.has(transceiver.sender)
+      );
+      senders.videoTransceiver ??= candidates.find(
+        (transceiver) => transceiver.receiver.track.kind === 'video'
+      );
+      senders.audioTransceiver ??= candidates.find(
+        (transceiver) => transceiver.receiver.track.kind === 'audio'
+      );
+      senders.video ??= senders.videoTransceiver?.sender;
+      senders.audio ??= senders.audioTransceiver?.sender;
     };
 
     const configurePeerConnection = (peer,userId) => {
@@ -244,22 +530,27 @@ function App() {
         });
       };
       peer.ontrack = (e) => {
-        console.log("🔥 REMOTE TRACK:", e.streams[0]);
-        const stream = e.streams[0];
-        if(!stream) return ;
+        const stream = e.streams[0] ?? new MediaStream([e.track]);
+        const share = screenSharesRef.current.get(userId);
+        const mid = e.transceiver.mid;
+        const source = share?.streamId === stream.id ||
+          (share?.videoMid && share.videoMid === mid) ||
+          (share?.audioMid && share.audioMid === mid)
+          ? 'screen'
+          : 'camera';
 
         setRemoteStreams((previous) => {
-          const exists=previous.some((item)=>
-            item.userId === userId 
+          const exists = previous.some(
+            (item) => item.userId === userId && item.stream.id === stream.id
           );
-          if(exists){
-            return previous.map((item)=>
-              item.userId === userId
-              ? { ...item, stream }
-              : item
-            )
+          if (exists) {
+            return previous.map((item) =>
+              item.userId === userId && item.stream.id === stream.id
+                ? { ...item, stream, source, mids: [...new Set([...item.mids, mid])] }
+                : item
+            );
           }
-          return [...previous, { userId, stream }];
+          return [...previous, { userId, stream, source, mids: [mid] }];
         });
       };
 
@@ -291,7 +582,7 @@ function App() {
       };
     };
 
-    const ensurePeerConnection = (userId) => {
+    const ensurePeerConnection = (userId, reserveScreenReceiveSlots = false) => {
       const existingPeer = peersRef.current.get(userId);
       if(existingPeer && existingPeer.signalingState!=="closed") return existingPeer;
       
@@ -304,11 +595,40 @@ function App() {
       if (!localStream) {
         throw new Error("Local media stream is not ready");
       }
-      localStream.getTracks().forEach((track) => {
-        peer.addTrack(track, localStream);
-      });
+      const localAudioTrack = localStream.getAudioTracks()[0];
+      const localVideoTrack = localStream.getVideoTracks()[0];
+      if (!localAudioTrack || !localVideoTrack) {
+        throw new Error("Both camera and microphone tracks are required to join the call");
+      }
 
-
+      const cameraSenders = new Set([
+        peer.addTrack(localAudioTrack, localStream),
+        peer.addTrack(localVideoTrack, localStream),
+      ]);
+      const senders = {
+        video: null,
+        audio: null,
+        videoTransceiver: null,
+        audioTransceiver: null,
+        cameraSenders,
+      };
+      const screenStream = screenShareStreamRef.current;
+      const screenVideoTrack = screenShareStreamRef.current?.getVideoTracks()[0];
+      const screenAudioTrack = screenShareStreamRef.current?.getAudioTracks()[0];
+      if (screenVideoTrack) {
+        senders.video = peer.addTrack(screenVideoTrack, screenStream);
+      } else if (reserveScreenReceiveSlots) {
+        senders.videoTransceiver = peer.addTransceiver('video', { direction: 'recvonly' });
+        senders.video = senders.videoTransceiver.sender;
+      }
+      if (screenAudioTrack) {
+        senders.audio = peer.addTrack(screenAudioTrack, screenStream);
+      } else if (reserveScreenReceiveSlots) {
+        senders.audioTransceiver = peer.addTransceiver('audio', { direction: 'recvonly' });
+        senders.audio = senders.audioTransceiver.sender;
+      }
+      screenShareSendersRef.current.set(userId, senders);
+      refreshScreenSenders(userId, peer);
 
       peersRef.current.set(userId, peer);
       return peer;
@@ -318,7 +638,7 @@ function App() {
 
     socketRef.current.on("connect",()=>{
       console.log(`Connected: ${socketRef.current.id}`);
-      socketRef.current.emit("join-room","abc123");
+      socketRef.current.emit("join-room", roomId);
     })
     socketRef.current.on("connect_error",(error)=>{
       console.error('Socket connection failed:', error.message);
@@ -338,10 +658,54 @@ function App() {
         }
 
         pendingCandidatesRef.current.delete(userId);
-
+        screenShareSendersRef.current.delete(userId);
+          screenNegotiationQueuesRef.current.delete(userId);
+          makingOfferRef.current.delete(userId);
+        screenSharesRef.current.delete(userId);
         setRemoteStreams((previous) =>
           previous.filter((item) => item.userId !== userId)
         );
+    });
+
+    socketRef.current.on('screen-share:state', ({
+      roomId: eventRoomId,
+      userId,
+      sharing,
+      streamId,
+      trackMids,
+    }) => {
+      if (eventRoomId !== roomId) return;
+      let share = null;
+      if (sharing && typeof streamId === 'string') {
+        const mids = trackMids?.[socketRef.current.id];
+        share = {
+          streamId,
+          videoMid: mids?.video ?? null,
+          audioMid: mids?.audio ?? null,
+        };
+        screenSharesRef.current.set(userId, share);
+      } else {
+        screenSharesRef.current.delete(userId);
+      }
+      setRemoteStreams((previous) => {
+        const remoteStreams = sharing
+          ? previous
+          : previous.filter((item) => item.userId !== userId || item.source !== 'screen');
+        return remoteStreams.map((item) =>
+          item.userId === userId
+            ? {
+                ...item,
+                source: sharing && (
+                  item.stream.id === streamId ||
+                  (share.videoMid && item.mids.includes(share.videoMid)) ||
+                  (share.audioMid && item.mids.includes(share.audioMid))
+                )
+                  ? 'screen'
+                  : 'camera',
+              }
+            : item
+        );
+      });
     });
     
     // webRtc connection
@@ -350,15 +714,19 @@ function App() {
       console.log("Existing users:", users);
        for (const Id of users){
           try {
-            const peer = ensurePeerConnection(Id);
-            //offering 
-            const offer = await peer.createOffer();
-            await peer.setLocalDescription(offer);
-            
-            socketRef.current.emit("offer",{
-              offer,
-              target : Id
-            });
+            const peer = ensurePeerConnection(Id, true);
+            makingOfferRef.current.add(Id);
+            try {
+              const offer = await peer.createOffer();
+              await peer.setLocalDescription(offer);
+              socketRef.current.emit("offer", {
+                offer,
+                target: Id,
+              });
+              publishScreenShareState();
+            } finally {
+              makingOfferRef.current.delete(Id);
+            }
 
             
           } catch (error) {
@@ -371,17 +739,33 @@ function App() {
 
       try {
       const peer = ensurePeerConnection(from);
+      const offerCollision = makingOfferRef.current.has(from) ||
+        peer.signalingState !== 'stable';
+      const polite = socketRef.current.id.localeCompare(from) > 0;
+      if (offerCollision && !polite) {
+        return;
+      }
+      if (offerCollision && peer.signalingState === 'have-local-offer') {
+        await peer.setLocalDescription({ type: 'rollback' });
+      }
+      if (peer.signalingState !== 'stable') {
+        throw new Error(`Cannot accept an offer while signaling is ${peer.signalingState}.`);
+      }
+      makingOfferRef.current.delete(from);
       await peer.setRemoteDescription(offer);
+      refreshScreenSenders(from, peer);
 
       await addPendingCandidates(from,peer);
 
        const answer = await peer.createAnswer();
        await peer.setLocalDescription(answer);
+       await constrainScreenShareSenders(from);
 
       socketRef.current.emit("answer",{
         answer,
         target:from
       });
+      publishScreenShareState();
       console.log("answer sent to ", from );
       
     }catch(error){
@@ -399,7 +783,10 @@ function App() {
         return;
       }
       await peer.setRemoteDescription(answer);
+      refreshScreenSenders(from, peer);
       await addPendingCandidates(from,peer);
+      await constrainScreenShareSenders(from);
+      publishScreenShareState();
 
       console.log("connection done with :", from);
       }catch(error){
@@ -456,8 +843,11 @@ function App() {
       cancelled = true;
       socketRef.current?.disconnect();
       socketRef.current = null;
+      setSocket(null);
+      screenShareSenders.clear();
+      screenShares.clear();
     };
-  }, [serverUrl])
+  }, [publishScreenShareState, roomId, serverUrl])
 
 
   return (
@@ -469,9 +859,13 @@ function App() {
       cameraSwitching={cameraSwitching}
       cameraError={cameraError}
       onSwitchCamera={switchCamera}
+      socket={socket}
+      roomId={roomId}
+      screenShareStream={screenShareStream}
+      onStartScreenShare={startScreenShare}
+      onStopScreenShare={stopScreenShare}
     />
   )
 }
 
 export default App
-

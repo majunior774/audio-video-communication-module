@@ -6,6 +6,8 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import StreamRouter from "./Routes/StreamRoute.js";
+import registerWhiteboardHandlers from "./whiteboard.js";
+import registerYouTubeHandlers from "./youtube.js";
 
 dotenv.config();
 
@@ -21,10 +23,13 @@ const io = new Server(server,{
         methods: ["GET", "POST"]
     }
 });
+const screenShares = new Map();
 
 //socket connection
 io.on("connection",(socket)=>{
     console.log(`Connected: ${socket.id}`);
+    registerWhiteboardHandlers(io, socket);
+    registerYouTubeHandlers(io, socket);
 
     socket.on("join-room",(roomId)=>{
         console.log(`user wants to join ${roomId}`);
@@ -36,11 +41,68 @@ io.on("connection",(socket)=>{
 
         socket.join(roomId);
 
+        for (const [userId, share] of screenShares.get(roomId) ?? []) {
+            socket.emit("screen-share:state", {
+                roomId,
+                userId,
+                sharing: true,
+                ...share,
+            });
+        }
+
         //telling everyone
         socket.to(roomId).emit("user-joined",socket.id);
 
         console.log(`user:${socket.id} is in room ${roomId}`);
     })
+    socket.on("screen-share:state", (payload = {}) => {
+        const { roomId, sharing, streamId, trackMids } = payload;
+        if (
+            typeof roomId !== "string" ||
+            roomId.length === 0 ||
+            roomId.length > 128 ||
+            !socket.rooms.has(roomId) ||
+            typeof sharing !== "boolean" ||
+            (sharing && (
+                typeof streamId !== "string" ||
+                streamId.length === 0 ||
+                streamId.length > 128 ||
+                !trackMids ||
+                typeof trackMids !== "object" ||
+                Array.isArray(trackMids) ||
+                Object.keys(trackMids).length > 128 ||
+                Object.values(trackMids).some((mids) =>
+                    !mids ||
+                    typeof mids !== "object" ||
+                    Array.isArray(mids) ||
+                    (mids.video !== null && typeof mids.video !== "string") ||
+                    (mids.audio !== null && typeof mids.audio !== "string")
+                )
+            ))
+        ) {
+            socket.emit("screen-share:error", {
+                message: "Invalid screen-share state update.",
+            });
+            return;
+        }
+
+        if (!screenShares.has(roomId)) screenShares.set(roomId, new Map());
+        const roomShares = screenShares.get(roomId);
+        if (sharing) {
+            roomShares.set(socket.id, { streamId, trackMids });
+        } else {
+            roomShares.delete(socket.id);
+            if (roomShares.size === 0) screenShares.delete(roomId);
+        }
+
+        socket.to(roomId).emit("screen-share:state", {
+            roomId,
+            userId: socket.id,
+            sharing,
+            streamId: sharing ? streamId : null,
+            trackMids: sharing ? trackMids : null,
+        });
+    });
     //webRTC set up
     socket.on("offer",({offer,target})=>{
         io.to(target).emit("offer",{offer,from:socket.id})
@@ -58,6 +120,16 @@ io.on("connection",(socket)=>{
         for (const roomId of socket.rooms) {
             if (roomId !== socket.id) {
                 socket.to(roomId).emit("user-left",socket.id);
+                const roomShares = screenShares.get(roomId);
+                if (roomShares?.delete(socket.id)) {
+                    socket.to(roomId).emit("screen-share:state", {
+                        roomId,
+                        userId: socket.id,
+                        sharing: false,
+                        streamId: null,
+                    });
+                    if (roomShares.size === 0) screenShares.delete(roomId);
+                }
             }
         }
     })

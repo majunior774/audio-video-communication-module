@@ -1,0 +1,587 @@
+.whiteboard {
+  --board-surface: #171a22;
+  --board-surface-raised: #1d212b;
+  --board-border: #2b303d;
+  --board-text: #e8eaf0;
+  --board-muted: #9299aa;
+  --board-accent: #8b9cff;
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--board-border);
+  border-radius: 16px;
+  background: var(--board-surface);
+  color: var(--board-text);
+  box-shadow: 0 16px 42px rgb(0 0 0 / 28%);
+}
+
+.whiteboard-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--board-border);
+  background: linear-gradient(110deg, #1d2230, #191c25 72%);
+}
+
+.whiteboard-heading-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgb(139 156 255 / 28%);
+  border-radius: 10px;
+  background: rgb(111 132 255 / 12%);
+  color: #a9b5ff;
+}
+
+.whiteboard-heading-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.whiteboard-heading-copy h2 {
+  margin: 0;
+  color: #f1f2f7;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.whiteboard-heading-copy span {
+  overflow: hidden;
+  color: var(--board-muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.whiteboard-presence {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 5px 9px;
+  border: 1px solid #373b46;
+  border-radius: 999px;
+  background: #222630;
+  color: #adb2c0;
+  font-size: 11px;
+  font-weight: 550;
+}
+
+.whiteboard-presence.is-live {
+  border-color: rgb(52 211 153 / 24%);
+  background: rgb(16 185 129 / 9%);
+  color: #77dfb8;
+}
+
+.whiteboard-presence-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #9299aa;
+}
+
+.whiteboard-presence.is-live .whiteboard-presence-dot {
+  background: #4adea8;
+  box-shadow: 0 0 10px rgb(74 222 168 / 65%);
+}
+
+.whiteboard-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--board-border);
+  background: var(--board-surface-raised);
+}
+
+.whiteboard-tools,
+.whiteboard-settings {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.whiteboard-color-swatches {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding-right: 4px;
+}
+
+.whiteboard-color-swatch {
+  width: 19px;
+  height: 19px;
+  padding: 0;
+  border: 2px solid #343946;
+  border-radius: 50%;
+  background: var(--swatch-color);
+  box-shadow: 0 0 0 1px #171a22;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.whiteboard-color-swatch:hover:not(:disabled) {
+  transform: scale(1.12);
+}
+
+.whiteboard-color-swatch.is-selected {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px var(--board-accent);
+}
+
+.whiteboard-color-swatch:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.whiteboard-tool,
+.whiteboard-action {
+  display: inline-flex;
+  min-height: 33px;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #b7bdcb;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 550;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.whiteboard-tool:hover:not(:disabled),
+.whiteboard-action:hover:not(:disabled) {
+  border-color: #3a4050;
+  background: #292e3a;
+  color: #f1f2f7;
+}
+
+.whiteboard-tool:active:not(:disabled),
+.whiteboard-action:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.whiteboard-tool.is-active {
+  border-color: rgb(139 156 255 / 38%);
+  background: rgb(111 132 255 / 15%);
+  color: #bdc7ff;
+  box-shadow: inset 0 0 0 1px rgb(139 156 255 / 5%);
+}
+
+.whiteboard-tool:disabled,
+.whiteboard-action:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.whiteboard-action {
+  min-width: 48px;
+  border-color: #353a48;
+  background: #252a35;
+  color: #d3d6e0;
+}
+
+.whiteboard-action.is-danger {
+  margin-left: auto;
+  border-color: rgb(248 113 113 / 22%);
+  background: rgb(239 68 68 / 8%);
+  color: #f0929a;
+}
+
+.whiteboard-action.is-danger:hover:not(:disabled) {
+  border-color: rgb(248 113 113 / 42%);
+  background: rgb(239 68 68 / 16%);
+  color: #ffb1b5;
+}
+
+.whiteboard-setting {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--board-muted);
+  font-size: 11px;
+  font-weight: 550;
+}
+
+.whiteboard-setting input[type='color'] {
+  width: 27px;
+  height: 27px;
+  padding: 3px;
+  border: 1px solid #3a4050;
+  border-radius: 7px;
+  background: #252a35;
+  cursor: pointer;
+}
+
+.whiteboard-setting input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.whiteboard-setting input[type='color']::-webkit-color-swatch {
+  border: 0;
+  border-radius: 4px;
+}
+
+.whiteboard-size input {
+  width: 82px;
+  accent-color: #8b9cff;
+  cursor: pointer;
+}
+
+.whiteboard-size span {
+  min-width: 18px;
+  color: #d3d6e0;
+  font-variant-numeric: tabular-nums;
+}
+
+.whiteboard-error {
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgb(248 113 113 / 22%);
+  background: #311f29;
+  color: #ff9a9f;
+  font-size: 12px;
+}
+
+.whiteboard-sync-status {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  padding: 10px 14px;
+  border: 1px solid #454b59;
+  border-radius: 10px;
+  background: rgb(29 33 43 / 94%);
+  color: #d1d5e0;
+  font-size: 12px;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 28%);
+}
+
+.whiteboard-error button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.whiteboard-canvas-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 35%, rgb(255 255 255 / 3%), transparent 75%),
+    #12151c;
+}
+
+.whiteboard-canvas,
+.whiteboard-active-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.whiteboard-canvas {
+  touch-action: none;
+  user-select: none;
+}
+
+.whiteboard-canvas--select {
+  cursor: default;
+}
+
+.whiteboard-canvas--pen,
+.whiteboard-canvas--eraser,
+.whiteboard-canvas--line,
+.whiteboard-canvas--arrow,
+.whiteboard-canvas--rectangle,
+.whiteboard-canvas--circle,
+.whiteboard-canvas--text,
+.whiteboard-canvas--sticky {
+  cursor: crosshair;
+}
+
+.whiteboard-canvas.is-disabled {
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.whiteboard-active-canvas {
+  pointer-events: none;
+}
+
+.whiteboard-object-text {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: #18181b;
+  font: 16px/1.35 system-ui, sans-serif;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: none;
+}
+
+.whiteboard-object-text.is-sticky {
+  font-size: 15px;
+}
+
+.whiteboard-text-editor {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  min-width: 180px;
+  min-height: 100px;
+  flex-direction: column;
+  gap: 7px;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px solid #7183f0;
+  border-radius: 10px;
+  background: rgb(27 31 42 / 96%);
+  color: #e8eaf0;
+  box-shadow: 0 8px 26px rgb(0 0 0 / 38%), 0 0 0 2px rgb(135 152 255 / 13%);
+  backdrop-filter: blur(10px);
+}
+
+.whiteboard-text-editor.is-sticky {
+  border-color: #e2c34f;
+  background: rgb(254 240 138 / 97%);
+  color: #27220f;
+}
+
+.whiteboard-text-editor-toolbar {
+  display: flex;
+  min-height: 25px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  color: #aeb8ff;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.whiteboard-text-editor.is-sticky .whiteboard-text-editor-toolbar {
+  color: #6f5f20;
+}
+
+.whiteboard-text-size-control {
+  display: inline-flex;
+  height: 24px;
+  align-items: center;
+  gap: 2px;
+  padding: 0 3px;
+  border: 1px solid #3c4352;
+  border-radius: 6px;
+  background: #171b24;
+  color: #d7dbea;
+}
+
+.whiteboard-text-size-control button {
+  display: grid;
+  width: 21px;
+  height: 20px;
+  place-items: center;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.whiteboard-text-size-control button:hover:not(:disabled) {
+  background: #343b4c;
+}
+
+.whiteboard-text-size-control button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.whiteboard-text-size-control span {
+  min-width: 22px;
+  text-align: center;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.whiteboard-text-editor.is-sticky .whiteboard-text-size-control {
+  border-color: rgb(111 95 32 / 28%);
+  background: rgb(255 248 194 / 80%);
+  color: #433a1a;
+}
+
+.whiteboard-text-input {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 4px 5px;
+  border: 0;
+  border-radius: 4px;
+  outline: none;
+  background: transparent;
+  color: var(--text-editor-color, #f1f2f7);
+  font: 500 var(--text-editor-font-size, 24px)/1.35 system-ui, sans-serif;
+  resize: none;
+}
+
+.whiteboard-text-input::placeholder {
+  color: #777f91;
+  opacity: 0.85;
+}
+
+.whiteboard-text-editor.is-sticky .whiteboard-text-input {
+  color: #27220f;
+}
+
+.whiteboard-text-editor.is-sticky .whiteboard-text-input::placeholder {
+  color: #76692f;
+}
+
+.whiteboard-text-editor-footer {
+  display: flex;
+  min-height: 27px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.whiteboard-text-editor-footer > span {
+  align-self: center;
+  color: #8f98aa;
+  font-size: 9px;
+}
+
+.whiteboard-text-editor.is-sticky .whiteboard-text-editor-footer > span {
+  color: #776a32;
+}
+
+.whiteboard-text-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.whiteboard-text-cancel,
+.whiteboard-text-save {
+  min-height: 25px;
+  padding: 4px 8px;
+  border: 1px solid #3b4251;
+  border-radius: 6px;
+  background: #292e3a;
+  color: #cbd0dc;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.whiteboard-text-cancel:hover,
+.whiteboard-text-save:hover:not(:disabled) {
+  border-color: #51596b;
+  background: #333948;
+}
+
+.whiteboard-text-save {
+  border-color: #7d8fff;
+  background: #8798ff;
+  color: #111522;
+}
+
+.whiteboard-text-save:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.whiteboard-text-resize-handle {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 0 0 8px 0;
+  background:
+    linear-gradient(135deg, transparent 46%, #8998ff 48%, #8998ff 55%, transparent 57%),
+    linear-gradient(135deg, transparent 66%, #8998ff 68%, #8998ff 75%, transparent 77%);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.whiteboard-text-editor.is-sticky .whiteboard-text-resize-handle {
+  background:
+    linear-gradient(135deg, transparent 46%, #9b8428 48%, #9b8428 55%, transparent 57%),
+    linear-gradient(135deg, transparent 66%, #9b8428 68%, #9b8428 75%, transparent 77%);
+}
+
+.whiteboard-tool:focus-visible,
+.whiteboard-action:focus-visible,
+.whiteboard-color-swatch:focus-visible,
+.whiteboard-setting input:focus-visible,
+.whiteboard-error button:focus-visible,
+.whiteboard-text-editor button:focus-visible {
+  outline: 2px solid #9aa8ff;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .whiteboard {
+    border-radius: 12px;
+  }
+
+  .whiteboard-heading {
+    min-height: 54px;
+    padding: 8px 10px;
+  }
+
+  .whiteboard-toolbar {
+    gap: 7px;
+    padding: 8px;
+  }
+
+  .whiteboard-tool,
+  .whiteboard-action {
+    min-height: 31px;
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+
+  .whiteboard-size input {
+    width: 66px;
+  }
+
+  .whiteboard-text-editor-footer {
+    gap: 3px;
+  }
+}

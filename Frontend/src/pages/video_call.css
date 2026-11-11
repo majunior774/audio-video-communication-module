@@ -12,12 +12,60 @@
   overflow: hidden;
 }
 
+/* ── call content ── */
+
+.call-main {
+  display: flex;
+  flex: 1;
+  gap: 0;
+  min-height: 0;
+  padding: 0;
+}
+
+.call-main--panels {
+  gap: 12px;
+  padding: 12px;
+}
+
+.call-main--panels .call-stage {
+  flex: 1 1 52%;
+}
+
+.call-main--panels .whiteboard,
+.call-main--panels .watch-together {
+  flex: 1 1 48%;
+}
+
+.call-main--two-panels .call-stage {
+  flex: 1 1 34%;
+}
+
+.call-main--two-panels .whiteboard,
+.call-main--two-panels .watch-together {
+  flex: 1 1 33%;
+}
+
 /* ── stage (video area) ── */
 
 .call-stage {
   flex: 1;
+  min-height: 0;
   position: relative;
   overflow: hidden;
+}
+
+.call-stage--adaptive {
+  overflow: hidden;
+}
+
+.call-stage--adaptive-grid {
+  box-sizing: border-box;
+  display: flex;
+  flex-flow: row wrap;
+  align-content: stretch;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
 }
 
 /* ── solo view (waiting for others) ── */
@@ -82,10 +130,37 @@
   grid-template-rows: 1fr 1fr;
 }
 
+.remote-grid--adaptive {
+  box-sizing: border-box;
+  display: flex;
+  flex-flow: row wrap;
+  align-content: stretch;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  gap: 8px;
+  padding: 8px;
+}
+
+.call-stage--adaptive-grid .remote-grid--adaptive {
+  display: contents;
+}
+
 .remote-tile {
   position: relative;
   background: #18181b;
   overflow: hidden;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.remote-grid--adaptive .remote-tile,
+.local-grid-tile {
+  box-sizing: border-box;
+  flex: 0 0 var(--adaptive-tile-width);
+  min-width: 0;
+  min-height: 0;
+  height: var(--adaptive-tile-height);
 }
 
 .remote-tile video {
@@ -138,6 +213,121 @@
   object-fit: cover;
 }
 
+.call-stage--adaptive:not(.call-stage--adaptive-grid) .local-pip {
+  right: 16px;
+  bottom: 16px;
+}
+
+.call-main--panels .local-pip {
+  bottom: 16px;
+}
+
+.local-grid-tile {
+  position: relative;
+  overflow: hidden;
+  background: #18181b;
+}
+
+.local-grid-tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remote-tile--screen {
+  background: #09090b;
+}
+
+.remote-tile--screen video {
+  object-fit: contain;
+}
+
+.call-tile--expanded {
+  position: absolute !important;
+  z-index: 8;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0;
+  min-height: 0;
+  flex: none !important;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  background: #050507;
+  box-shadow: none;
+  cursor: zoom-out;
+}
+
+.call-tile--expanded video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.call-tile--expanded.remote-tile--screen video,
+.call-tile--expanded.local-screen-share-tile video {
+  object-fit: contain;
+}
+
+.call-tile--expanded > .tile-expand-hint {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 60%);
+  color: #fff;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.solo-view,
+.local-grid-tile,
+.local-pip,
+.local-screen-share-tile {
+  touch-action: manipulation;
+}
+
+.local-grid-tile,
+.local-pip,
+.solo-view,
+.local-screen-share-tile {
+  cursor: pointer;
+}
+
+.local-screen-share-tile {
+  position: absolute;
+  z-index: 4;
+  top: 16px;
+  right: 16px;
+  width: min(30vw, 320px);
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 12px;
+  background: #09090b;
+  box-shadow: 0 8px 26px rgb(0 0 0 / 40%);
+}
+
+.local-screen-share-tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.local-screen-share-tile span {
+  position: absolute;
+  bottom: 7px;
+  left: 8px;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: rgb(0 0 0 / 65%);
+  color: #fff;
+  font-size: 11px;
+}
+
 /* ── controls bar ── */
 
 .call-bar {
@@ -174,6 +364,241 @@
 .ctl-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+.call-tools-menu {
+  position: relative;
+}
+
+.call-tools-trigger {
+  position: relative;
+  list-style: none;
+}
+
+.call-tools-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.call-tools-indicator {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid #111;
+  border-radius: 50%;
+  background: #60a5fa;
+}
+
+.call-tools-dropdown {
+  position: absolute;
+  z-index: 20;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  display: none;
+  width: 210px;
+  padding: 6px;
+  transform: translateX(-50%);
+  border: 1px solid #3f3f46;
+  border-radius: 12px;
+  background: #1c1c20;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 40%);
+}
+
+.call-tools-menu[open] .call-tools-dropdown {
+  display: grid;
+  gap: 3px;
+}
+
+.call-tool-option {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 11px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #e4e4e7;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.call-tool-option:hover,
+.call-tool-option--active {
+  background: #303038;
+}
+
+.call-tool-option--active svg {
+  color: #93c5fd;
+}
+
+.call-tool-option > span:nth-child(2) {
+  flex: 1;
+}
+
+.call-tool-status {
+  color: #93c5fd;
+  font-size: 11px;
+}
+
+.screen-share-backdrop {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(0 0 0 / 65%);
+}
+
+.screen-share-dialog {
+  width: min(100%, 440px);
+  box-sizing: border-box;
+  padding: 22px;
+  border: 1px solid #3f3f46;
+  border-radius: 16px;
+  background: #1c1c20;
+  color: #f4f4f5;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 55%);
+}
+
+.screen-share-dialog-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.screen-share-dialog-heading h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.screen-share-dialog-heading p,
+.screen-share-note {
+  color: #a1a1aa;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.screen-share-dialog-heading p {
+  margin: 7px 0 0;
+}
+
+.screen-share-close {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #a1a1aa;
+  font-size: 23px;
+  cursor: pointer;
+}
+
+.screen-share-close:hover {
+  background: #303038;
+  color: #fff;
+}
+
+.screen-share-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 12px 0;
+  color: #e4e4e7;
+  font-size: 13px;
+}
+
+.screen-share-setting select {
+  min-width: 120px;
+  padding: 8px 10px;
+  border: 1px solid #3f3f46;
+  border-radius: 7px;
+  background: #111114;
+  color: #f4f4f5;
+  font: inherit;
+}
+
+.screen-share-audio {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 18px 0 8px;
+  color: #e4e4e7;
+  font-size: 13px;
+}
+
+.screen-share-audio input {
+  width: 16px;
+  height: 16px;
+  accent-color: #5865f2;
+}
+
+.screen-share-note {
+  margin: 8px 0 0;
+}
+
+.screen-share-error {
+  margin: 12px 0 0;
+  color: #fca5a5;
+  font-size: 12px;
+}
+
+.screen-share-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 21px;
+}
+
+.screen-share-actions button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 7px;
+  color: #f4f4f5;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.screen-share-cancel {
+  background: #303038;
+}
+
+.screen-share-cancel:hover {
+  background: #3f3f46;
+}
+
+.screen-share-start {
+  background: #5865f2;
+}
+
+.screen-share-start:hover {
+  background: #4752c4;
+}
+
+.screen-share-toast {
+  position: fixed;
+  z-index: 40;
+  bottom: 88px;
+  left: 50%;
+  max-width: min(90vw, 440px);
+  padding: 10px 14px;
+  transform: translateX(-50%);
+  border: 1px solid #eab30866;
+  border-radius: 9px;
+  background: #292314;
+  color: #fde68a;
+  font-size: 12px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 30%);
 }
 
 .ctl-btn--off {
@@ -215,6 +640,24 @@
 /* ── responsive tweaks ── */
 
 @media (max-width: 480px) {
+  .call-main {
+    gap: 8px;
+  }
+
+  .call-main--panels {
+    padding: 8px;
+    flex-direction: column;
+  }
+
+  .call-main--panels .call-stage {
+    flex: 1 1 36%;
+  }
+
+  .call-main--panels .whiteboard,
+  .call-main--panels .watch-together {
+    flex: 1 1 32%;
+  }
+
   .local-pip {
     width: 90px;
     bottom: 80px;

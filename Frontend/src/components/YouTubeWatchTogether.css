@@ -1,0 +1,446 @@
+.watch-together {
+  --watch-surface: #171a22;
+  --watch-raised: #1d212b;
+  --watch-border: #2b303d;
+  --watch-text: #e8eaf0;
+  --watch-muted: #9299aa;
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--watch-border);
+  border-radius: 16px;
+  background: var(--watch-surface);
+  color: var(--watch-text);
+  box-shadow: 0 16px 42px rgb(0 0 0 / 28%);
+}
+
+.watch-together-heading {
+  display: flex;
+  min-height: 60px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--watch-border);
+  background: linear-gradient(110deg, #24202b, #191c25 72%);
+}
+
+.watch-together-brand {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.watch-together-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgb(248 113 113 / 25%);
+  border-radius: 10px;
+  background: rgb(239 68 68 / 11%);
+  color: #ff777d;
+}
+
+.watch-together-brand h2 {
+  margin: 0;
+  color: #f1f2f7;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.watch-together-brand p {
+  margin: 3px 0 0;
+  color: var(--watch-muted);
+  font-size: 11px;
+}
+
+.watch-together-live {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border: 1px solid rgb(52 211 153 / 24%);
+  border-radius: 999px;
+  background: rgb(16 185 129 / 9%);
+  color: #77dfb8;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.watch-together-live span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4adea8;
+  box-shadow: 0 0 10px rgb(74 222 168 / 65%);
+}
+
+.watch-together-share {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--watch-border);
+  background: var(--watch-raised);
+}
+
+.watch-together-share label {
+  color: #b7bdcb;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.watch-together-input-row {
+  display: flex;
+  gap: 7px;
+}
+
+.watch-together-input-row input {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  box-sizing: border-box;
+  padding: 0 11px;
+  border: 1px solid #3a4050;
+  border-radius: 8px;
+  outline: none;
+  background: #141821;
+  color: #f1f2f7;
+  font: inherit;
+  font-size: 11px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.watch-together-input-row input::placeholder {
+  color: #737b8c;
+}
+
+.watch-together-input-row input:focus {
+  border-color: #fa777b;
+  box-shadow: 0 0 0 3px rgb(248 113 113 / 12%);
+}
+
+.watch-together-input-row button {
+  min-width: 62px;
+  padding: 0 12px;
+  border: 1px solid #f1666c;
+  border-radius: 8px;
+  background: #e94d55;
+  color: #ffffff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.watch-together-input-row button:hover:not(:disabled) {
+  background: #f26067;
+}
+
+.watch-together-input-row button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.watch-together-error {
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 12px;
+  border-bottom: 1px solid rgb(248 113 113 / 22%);
+  background: #311f29;
+  color: #ff9a9f;
+  font-size: 11px;
+}
+
+.watch-together-error button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.watch-together-player {
+  position: relative;
+  display: grid;
+  flex: 1;
+  min-height: 120px;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 35%, rgb(255 255 255 / 4%), transparent 75%),
+    #101218;
+}
+
+.watch-together-player-host {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.watch-together-player-host iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.watch-together-empty {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: min(250px, 85%);
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.watch-together-empty-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 3px;
+  place-items: center;
+  border: 1px solid rgb(248 113 113 / 18%);
+  border-radius: 16px;
+  background: rgb(239 68 68 / 8%);
+  color: #ee646c;
+}
+
+.watch-together-empty strong {
+  color: #e6e8ef;
+  font-size: 12px;
+}
+
+.watch-together-empty > span {
+  color: #8d95a6;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.watch-together-play-overlay {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(10 12 17 / 55%);
+}
+
+.watch-together-play-overlay button {
+  padding: 10px 14px;
+  border: 1px solid #ff7b82;
+  border-radius: 9px;
+  background: #e94d55;
+  color: white;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.watch-together-play-overlay button:hover {
+  background: #f26067;
+}
+
+.watch-together-controls {
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 24px 12px 9px;
+  background: linear-gradient(transparent, rgb(8 10 14 / 94%) 38%);
+}
+
+.watch-together-seek-row,
+.watch-together-control-row,
+.watch-together-volume {
+  display: flex;
+  align-items: center;
+}
+
+.watch-together-seek-row {
+  gap: 8px;
+  color: #e6e8ef;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.watch-together-seek-row > span {
+  min-width: 32px;
+}
+
+.watch-together-seek-row > span:last-child {
+  text-align: right;
+}
+
+.watch-together-seek-row input,
+.watch-together-volume input {
+  min-width: 0;
+  height: 4px;
+  accent-color: #f1666c;
+  cursor: pointer;
+}
+
+.watch-together-seek-row input {
+  flex: 1;
+}
+
+.watch-together-control-row {
+  gap: 9px;
+}
+
+.watch-together-control-button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #f4f5f8;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.watch-together-control-button:hover:not(:disabled) {
+  background: rgb(255 255 255 / 13%);
+}
+
+.watch-together-control-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.watch-together-volume {
+  gap: 5px;
+}
+
+.watch-together-volume input {
+  width: 64px;
+}
+
+.watch-together-control-row select {
+  margin-left: auto;
+  padding: 5px 7px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 6px;
+  background: #171a22;
+  color: #f1f2f7;
+  font: inherit;
+  font-size: 10px;
+}
+
+.watch-together-control-row select:focus-visible {
+  outline: 2px solid #ff969b;
+  outline-offset: 2px;
+}
+
+.watch-together-player:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  background: #08090d;
+}
+
+.watch-together-footer {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 11px;
+  border-top: 1px solid var(--watch-border);
+  background: #1a1d26;
+}
+
+.watch-together-video-title {
+  overflow: hidden;
+  flex: 1;
+  color: #c4c9d5;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.watch-together-stop {
+  border: 0;
+  background: transparent;
+  color: #f0929a;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.watch-together-stop:hover {
+  color: #ffb1b5;
+}
+
+.watch-together-footer > span {
+  flex: 0 0 auto;
+  color: #7f8798;
+  font-size: 9px;
+}
+
+.watch-together input:focus-visible,
+.watch-together button:focus-visible {
+  outline: 2px solid #ff969b;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .watch-together {
+    border-radius: 12px;
+  }
+
+  .watch-together-heading {
+    min-height: 52px;
+    padding: 8px 10px;
+  }
+
+  .watch-together-share {
+    padding: 8px;
+  }
+
+  .watch-together-player {
+    min-height: 100px;
+  }
+
+  .watch-together-controls {
+    padding-right: 7px;
+    padding-left: 7px;
+  }
+
+  .watch-together-control-row {
+    gap: 4px;
+  }
+
+  .watch-together-volume input {
+    width: 42px;
+  }
+
+  .watch-together-footer > span {
+    display: none;
+  }
+}
