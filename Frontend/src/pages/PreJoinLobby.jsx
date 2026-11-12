@@ -15,7 +15,6 @@ export default function PreJoinLobby({
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [fullscreenError, setFullscreenError] = useState('');
 
   const [displayName, setDisplayName] = useState(() => {
     return localStorage.getItem('sr_display_name') || '';
@@ -52,37 +51,16 @@ export default function PreJoinLobby({
       .catch(console.error);
   };
 
-  const handleJoin = async (e) => {
+  const handleJoin = (e) => {
     e.preventDefault();
     if (displayName.trim()) {
       localStorage.setItem('sr_display_name', displayName.trim());
     }
-
-    if (!document.fullscreenElement) {
-      if (!document.documentElement.requestFullscreen) {
-        setFullscreenError('Fullscreen is not supported by this browser. Use a supported browser to join the call.');
-        return;
-      }
-
-      try {
-        await document.documentElement.requestFullscreen();
-      } catch {
-        setFullscreenError('Fullscreen is required to join the call. Allow fullscreen access and try again.');
-        return;
-      }
-    }
-
-    setFullscreenError('');
     onJoinRoom();
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#080F1A] text-slate-100 flex flex-col items-center justify-between overflow-x-hidden selection:bg-indigo-500 selection:text-white">
-      {/* Background ambient lighting */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-gradient-to-b from-indigo-600/15 via-purple-600/10 to-transparent blur-[160px]" />
-      <div className="pointer-events-none absolute top-1/3 -left-48 w-96 h-96 bg-cyan-500/10 blur-[160px]" />
-      <div className="pointer-events-none absolute bottom-10 -right-48 w-96 h-96 bg-indigo-500/10 blur-[160px]" />
-
+    <div className="sr-light-page sr-lobby relative min-h-screen w-full flex flex-col items-center justify-between overflow-x-hidden">
       {/* ── Top Header ── */}
       <header className="relative z-10 w-full px-8 sm:px-14 py-6 sm:py-7 flex items-center justify-between border-b border-white/[0.06] backdrop-blur-md">
         <StudyRoomsBrand size="md" />
@@ -103,7 +81,7 @@ export default function PreJoinLobby({
           <div className="w-full flex flex-col items-center justify-center text-center mb-10 sm:mb-12">
             <div className="inline-flex items-center justify-center gap-2.5 px-4 py-1.5 rounded-full bg-slate-900/90 border border-indigo-500/30 text-xs sm:text-sm font-semibold text-slate-300 mb-4 backdrop-blur-md shadow-sm">
               <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]" />
-              <span>Pre-Join Staging Area</span>
+              <span>Camera and mic check</span>
             </div>
 
             <h1 className="sr-font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight text-center">
@@ -115,7 +93,7 @@ export default function PreJoinLobby({
           </div>
 
           {/* ── Video Preview Mirror Card ── */}
-          <div className="relative w-full aspect-video rounded-3xl bg-slate-900 border border-white/10 shadow-[0_24px_70px_-15px_rgba(0,0,0,0.85)] overflow-hidden flex items-center justify-center group ring-1 ring-white/10 hover:ring-indigo-500/20 transition-all duration-300">
+          <div className="sr-lobby__preview relative w-full aspect-video rounded-3xl bg-slate-900 border border-white/10 overflow-hidden flex items-center justify-center group ring-1 ring-white/10 hover:ring-indigo-500/20 transition-all duration-300">
             {/* Live Video Element */}
             <video
               ref={localVideoRef}
@@ -247,15 +225,9 @@ export default function PreJoinLobby({
             </div>
           )}
 
-          {/* ── Join Form Card (Open, Airy, Luxury Glassmorphism) ── */}
-          <div className="mt-10 sm:mt-12 w-full p-8 sm:p-10 rounded-3xl bg-slate-900/60 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl ring-1 ring-white/5">
+          {/* ── Join Form Card ── */}
+          <div className="sr-lobby__join mt-10 sm:mt-12 w-full p-8 sm:p-10 rounded-3xl bg-slate-900/60 border border-white/10 ring-1 ring-white/5">
             <form onSubmit={handleJoin} className="flex flex-col">
-              {fullscreenError && (
-                <div className="mb-6 rounded-xl border border-amber-400/30 bg-amber-950/40 px-4 py-3 text-sm text-amber-200" role="alert">
-                  {fullscreenError}
-                </div>
-              )}
-
               {/* Display Name Section */}
               <div className="mb-7 sm:mb-8">
                 <label htmlFor="displayNameInput" className="block text-xs uppercase tracking-wider font-bold text-slate-300 mb-3 flex items-center gap-2">
@@ -322,7 +294,7 @@ export default function PreJoinLobby({
 
       {/* ── Footer ── */}
       <footer className="relative z-10 w-full border-t border-white/[0.05] py-5 px-6 text-center text-xs text-slate-400">
-        StudyRooms Pre-Join Lobby • Secure P2P Device Check
+        StudyRooms Pre-Join Lobby • Device check
       </footer>
     </div>
   );
