@@ -1,9 +1,20 @@
+/* ══════════════════════════════════════════════════
+   StudyRooms — YouTubeWatchTogether.css
+   Visual harmonization with Deep Navy & Slate design tokens.
+   All YouTube iframe sync logic & events preserved 100%.
+   ══════════════════════════════════════════════════ */
+
 .watch-together {
-  --watch-surface: #171a22;
-  --watch-raised: #1d212b;
-  --watch-border: #2b303d;
-  --watch-text: #e8eaf0;
-  --watch-muted: #9299aa;
+  --watch-surface: #080F1A;
+  --watch-raised: #1E293B;
+  --watch-elevated: #0F172A;
+  --watch-border: rgba(255, 255, 255, 0.08);
+  --watch-text: #F8FAFC;
+  --watch-muted: #94A3B8;
+  --watch-accent: #6366F1;
+  --watch-secondary: #06B6D4;
+  --watch-yt-red: #EF4444;
+
   position: relative;
   display: flex;
   min-width: 0;
@@ -11,11 +22,13 @@
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--watch-border);
-  border-radius: 16px;
+  border-radius: 18px;
   background: var(--watch-surface);
   color: var(--watch-text);
-  box-shadow: 0 16px 42px rgb(0 0 0 / 28%);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
 }
+
+/* ── Heading Bar ── */
 
 .watch-together-heading {
   display: flex;
@@ -23,39 +36,42 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--watch-border);
-  background: linear-gradient(110deg, #24202b, #191c25 72%);
+  background: linear-gradient(110deg, #1E293B 0%, #0F172A 75%);
 }
 
 .watch-together-brand {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .watch-together-icon {
   display: grid;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgb(248 113 113 / 25%);
+  border: 1px solid rgba(239, 68, 68, 0.35);
   border-radius: 10px;
-  background: rgb(239 68 68 / 11%);
-  color: #ff777d;
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
 }
 
 .watch-together-brand h2 {
   margin: 0;
-  color: #f1f2f7;
-  font-size: 13px;
-  font-weight: 650;
+  color: #fff;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .watch-together-brand p {
-  margin: 3px 0 0;
+  margin: 2px 0 0;
   color: var(--watch-muted);
   font-size: 11px;
 }
@@ -65,101 +81,112 @@
   flex: 0 0 auto;
   align-items: center;
   gap: 6px;
-  padding: 5px 9px;
-  border: 1px solid rgb(52 211 153 / 24%);
+  padding: 5px 11px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
   border-radius: 999px;
-  background: rgb(16 185 129 / 9%);
-  color: #77dfb8;
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
 }
 
 .watch-together-live span {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #4adea8;
-  box-shadow: 0 0 10px rgb(74 222 168 / 65%);
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
 }
+
+/* ── Share / URL Input Bar ── */
 
 .watch-together-share {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--watch-border);
   background: var(--watch-raised);
 }
 
 .watch-together-share label {
-  color: #b7bdcb;
-  font-size: 10px;
+  color: #cbd5e1;
+  font-size: 11px;
   font-weight: 600;
 }
 
 .watch-together-input-row {
   display: flex;
-  gap: 7px;
+  gap: 8px;
 }
 
 .watch-together-input-row input {
   width: 100%;
   min-width: 0;
-  height: 36px;
+  height: 38px;
   box-sizing: border-box;
-  padding: 0 11px;
-  border: 1px solid #3a4050;
-  border-radius: 8px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
   outline: none;
-  background: #141821;
-  color: #f1f2f7;
+  background: var(--watch-elevated);
+  color: #f8fafc;
   font: inherit;
-  font-size: 11px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-size: 12px;
+  transition: all 0.15s ease;
 }
 
 .watch-together-input-row input::placeholder {
-  color: #737b8c;
+  color: #64748b;
 }
 
 .watch-together-input-row input:focus {
-  border-color: #fa777b;
-  box-shadow: 0 0 0 3px rgb(248 113 113 / 12%);
+  border-color: var(--watch-secondary);
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
 }
 
 .watch-together-input-row button {
-  min-width: 62px;
-  padding: 0 12px;
-  border: 1px solid #f1666c;
-  border-radius: 8px;
-  background: #e94d55;
+  min-width: 70px;
+  padding: 0 14px;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--watch-accent), #4f46e5);
   color: #ffffff;
   font: inherit;
   font-size: 11px;
-  font-weight: 650;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s ease, opacity 0.15s ease;
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+  transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .watch-together-input-row button:hover:not(:disabled) {
-  background: #f26067;
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
 }
 
 .watch-together-input-row button:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
+/* ── Error Banner ── */
+
 .watch-together-error {
-  z-index: 3;
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 7px 12px;
-  border-bottom: 1px solid rgb(248 113 113 / 22%);
-  background: #311f29;
-  color: #ff9a9f;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(45, 15, 20, 0.95);
+  color: #fca5a5;
   font-size: 11px;
 }
 
@@ -171,16 +198,18 @@
   cursor: pointer;
 }
 
+/* ── Video Player Host ── */
+
 .watch-together-player {
   position: relative;
   display: grid;
   flex: 1;
-  min-height: 120px;
+  min-height: 140px;
   place-items: center;
   overflow: hidden;
   background:
-    radial-gradient(ellipse at 50% 35%, rgb(255 255 255 / 4%), transparent 75%),
-    #101218;
+    radial-gradient(ellipse at 50% 35%, rgba(99, 102, 241, 0.05) 0%, transparent 75%),
+    #070b13;
 }
 
 .watch-together-player-host {
@@ -199,40 +228,47 @@
   border: 0;
 }
 
+/* ── Empty State ── */
+
 .watch-together-empty {
   position: relative;
   z-index: 1;
   display: flex;
-  width: min(250px, 85%);
+  width: min(280px, 85%);
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   text-align: center;
   pointer-events: none;
 }
 
 .watch-together-empty-icon {
   display: grid;
-  width: 52px;
-  height: 52px;
-  margin-bottom: 3px;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
   place-items: center;
-  border: 1px solid rgb(248 113 113 / 18%);
-  border-radius: 16px;
-  background: rgb(239 68 68 / 8%);
-  color: #ee646c;
+  border: 1.5px solid rgba(239, 68, 68, 0.25);
+  border-radius: 18px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15);
 }
 
 .watch-together-empty strong {
-  color: #e6e8ef;
-  font-size: 12px;
+  color: #fff;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .watch-together-empty > span {
-  color: #8d95a6;
-  font-size: 10px;
+  color: var(--watch-muted);
+  font-size: 11px;
   line-height: 1.5;
 }
+
+/* ── Autoplay Overlay ── */
 
 .watch-together-play-overlay {
   position: absolute;
@@ -240,24 +276,30 @@
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgb(10 12 17 / 55%);
+  background: rgba(8, 15, 26, 0.65);
+  backdrop-filter: blur(4px);
 }
 
 .watch-together-play-overlay button {
-  padding: 10px 14px;
-  border: 1px solid #ff7b82;
-  border-radius: 9px;
-  background: #e94d55;
+  padding: 10px 18px;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--watch-accent), #4f46e5);
   color: white;
   font: inherit;
-  font-size: 11px;
-  font-weight: 650;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 4px 18px rgba(99, 102, 241, 0.4);
+  transition: all 0.15s ease;
 }
 
 .watch-together-play-overlay button:hover {
-  background: #f26067;
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  transform: scale(1.03);
 }
+
+/* ── Bottom Controls Overlay ── */
 
 .watch-together-controls {
   position: absolute;
@@ -267,9 +309,9 @@
   left: 0;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  padding: 24px 12px 9px;
-  background: linear-gradient(transparent, rgb(8 10 14 / 94%) 38%);
+  gap: 6px;
+  padding: 24px 14px 10px;
+  background: linear-gradient(transparent, rgba(8, 15, 26, 0.95) 45%);
 }
 
 .watch-together-seek-row,
@@ -280,10 +322,11 @@
 }
 
 .watch-together-seek-row {
-  gap: 8px;
-  color: #e6e8ef;
+  gap: 10px;
+  color: #e2e8f0;
   font-size: 10px;
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 .watch-together-seek-row > span {
@@ -298,7 +341,7 @@
 .watch-together-volume input {
   min-width: 0;
   height: 4px;
-  accent-color: #f1666c;
+  accent-color: var(--watch-secondary);
   cursor: pointer;
 }
 
@@ -307,79 +350,85 @@
 }
 
 .watch-together-control-row {
-  gap: 9px;
+  gap: 10px;
 }
 
 .watch-together-control-button {
   display: grid;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   flex: 0 0 auto;
   place-items: center;
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: transparent;
-  color: #f4f5f8;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
   font: inherit;
   font-size: 13px;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .watch-together-control-button:hover:not(:disabled) {
-  background: rgb(255 255 255 / 13%);
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(1.05);
 }
 
 .watch-together-control-button:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .watch-together-volume {
-  gap: 5px;
+  gap: 6px;
 }
 
 .watch-together-volume input {
-  width: 64px;
+  width: 68px;
 }
 
 .watch-together-control-row select {
   margin-left: auto;
-  padding: 5px 7px;
-  border: 1px solid rgb(255 255 255 / 18%);
-  border-radius: 6px;
-  background: #171a22;
-  color: #f1f2f7;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  background: var(--watch-elevated);
+  color: #f8fafc;
   font: inherit;
-  font-size: 10px;
+  font-size: 11px;
+  cursor: pointer;
 }
 
 .watch-together-control-row select:focus-visible {
-  outline: 2px solid #ff969b;
+  outline: 2px solid var(--watch-secondary);
   outline-offset: 2px;
 }
 
 .watch-together-player:fullscreen {
   width: 100vw;
   height: 100vh;
-  background: #08090d;
+  background: #080F1A;
 }
+
+/* ── Footer ── */
 
 .watch-together-footer {
   display: flex;
-  min-height: 36px;
+  min-height: 38px;
   align-items: center;
-  gap: 8px;
-  padding: 6px 11px;
+  gap: 10px;
+  padding: 6px 14px;
   border-top: 1px solid var(--watch-border);
-  background: #1a1d26;
+  background: var(--watch-raised);
 }
 
 .watch-together-video-title {
   overflow: hidden;
   flex: 1;
-  color: #c4c9d5;
-  font-size: 10px;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -387,57 +436,61 @@
 .watch-together-stop {
   border: 0;
   background: transparent;
-  color: #f0929a;
+  color: #fca5a5;
   font: inherit;
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 600;
   cursor: pointer;
+  transition: color 0.15s ease;
 }
 
 .watch-together-stop:hover {
-  color: #ffb1b5;
+  color: #f87171;
 }
 
 .watch-together-footer > span {
   flex: 0 0 auto;
-  color: #7f8798;
-  font-size: 9px;
+  color: #64748b;
+  font-size: 10px;
 }
 
 .watch-together input:focus-visible,
 .watch-together button:focus-visible {
-  outline: 2px solid #ff969b;
+  outline: 2px solid var(--watch-secondary);
   outline-offset: 2px;
 }
 
+/* ── Mobile Breakpoint ── */
+
 @media (max-width: 600px) {
   .watch-together {
-    border-radius: 12px;
+    border-radius: 14px;
   }
 
   .watch-together-heading {
     min-height: 52px;
-    padding: 8px 10px;
+    padding: 8px 12px;
   }
 
   .watch-together-share {
-    padding: 8px;
+    padding: 8px 10px;
   }
 
   .watch-together-player {
-    min-height: 100px;
+    min-height: 110px;
   }
 
   .watch-together-controls {
-    padding-right: 7px;
-    padding-left: 7px;
+    padding-right: 8px;
+    padding-left: 8px;
   }
 
   .watch-together-control-row {
-    gap: 4px;
+    gap: 6px;
   }
 
   .watch-together-volume input {
-    width: 42px;
+    width: 46px;
   }
 
   .watch-together-footer > span {
