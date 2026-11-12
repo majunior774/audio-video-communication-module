@@ -75,6 +75,8 @@ export default function VideoCall({
   const [expandedTile, setExpandedTile] = useState(null);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(() => Boolean(document.fullscreenElement));
+  const [fullscreenError, setFullscreenError] = useState('');
   const [showControls, setShowControls] = useState(true);
   const [whiteboardOpen, setWhiteboardOpen] = useState(false);
   const [watchTogetherOpen, setWatchTogetherOpen] = useState(false);
@@ -88,12 +90,23 @@ export default function VideoCall({
 
   const hideTimer = useRef(null);
   const toolsMenuRef = useRef(null);
+  const controlsDockRef = useRef(null);
   const screenVideoRef = useRef(null);
   const lastTileTapRef = useRef(null);
 
   const hasRemote = remoteStreams.length > 0;
   // Elapsed timer runs continuously while inside the meeting room
   const elapsed = useElapsed(true);
+
+  useEffect(() => {
+    const updateFullscreen = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+      if (document.fullscreenElement) setFullscreenError('');
+    };
+    document.addEventListener('fullscreenchange', updateFullscreen);
+    updateFullscreen();
+    return () => document.removeEventListener('fullscreenchange', updateFullscreen);
+  }, []);
 
   /* ── screen share preview ── */
   useEffect(() => {
@@ -157,17 +170,75 @@ export default function VideoCall({
     setExpandedTile((c) => c === tileId ? null : tileId);
   };
 
-  /* ── auto-hide controls ── */
-  const resetHideTimer = useCallback(() => {
-    setShowControls(true);
+  /* ── Show controls only when the pointer approaches the bottom dock. ── */
+  const showControlDock = useCallback(() => {
     clearTimeout(hideTimer.current);
-    hideTimer.current = setTimeout(() => setShowControls(false), 4500);
+    setShowControls(true);
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setShowControls(false), 4500);
-    return () => clearTimeout(timer);
+  const scheduleHideControls = useCallback(() => {
+    clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => {
+      if (!toolsMenuRef.current?.open) setShowControls(false);
+    }, 1800);
   }, []);
+
+  const handlePointerMove = useCallback((event) => {
+    const dock = controlsDockRef.current;
+    if (!dock) return;
+    const bounds = dock.getBoundingClientRect();
+    const proximity = 64;
+    if (
+      event.clientX >= bounds.left - proximity &&
+      event.clientX <= bounds.right + proximity &&
+      event.clientY >= bounds.top - proximity &&
+      event.clientY <= bounds.bottom + proximity
+    ) {
+      showControlDock();
+      if (!dock.contains(event.target)) scheduleHideControls();
+    }
+  }, [scheduleHideControls, showControlDock]);
+
+  const handlePointerDown = useCallback((event) => {
+    if (event.pointerType !== 'touch') return;
+    const dock = controlsDockRef.current;
+    if (!dock) return;
+    const bounds = dock.getBoundingClientRect();
+    const proximity = 64;
+    if (
+      event.clientX >= bounds.left - proximity &&
+      event.clientX <= bounds.right + proximity &&
+      event.clientY >= bounds.top - proximity &&
+      event.clientY <= bounds.bottom + proximity
+    ) {
+      showControlDock();
+      clearTimeout(hideTimer.current);
+      hideTimer.current = setTimeout(() => setShowControls(false), 4500);
+    }
+  }, [showControlDock]);
+
+  const returnToFullscreen = async () => {
+    try {
+      await document.documentElement.requestFullscreen();
+      setFullscreenError('');
+    } catch {
+      setFullscreenError('Fullscreen is required for this call. Allow fullscreen access and try again.');
+    }
+  };
+
+  const leaveCall = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+    } catch (error) {
+      console.error('Unable to exit fullscreen after leaving the call:', error);
+    }
+    onLeaveCall();
+  };
+
+  useEffect(() => {
+    scheduleHideControls();
+    return () => clearTimeout(hideTimer.current);
+  }, [scheduleHideControls]);
 
   /* ── toggle helpers ── */
   const toggleMic = () => {
@@ -251,11 +322,21 @@ export default function VideoCall({
   return (
     <div
       className="vc selection:bg-indigo-500 selection:text-white"
-      onMouseMove={resetHideTimer}
-      onTouchStart={resetHideTimer}
+      onPointerMove={handlePointerMove}
+      onPointerDown={handlePointerDown}
     >
+      {!isFullscreen && (
+        <div className="vc-fullscreen-gate" role="dialog" aria-modal="true" aria-labelledby="vc-fullscreen-title">
+          <div className="vc-fullscreen-gate__card">
+            <h1 id="vc-fullscreen-title">Fullscreen required</h1>
+            <p>Return to fullscreen to continue your study session.</p>
+            {fullscreenError && <p className="vc-fullscreen-gate__error" role="alert">{fullscreenError}</p>}
+            <button type="button" onClick={returnToFullscreen}>Return to fullscreen</button>
+          </div>
+        </div>
+      )}
       {/* ── Top Bar ── */}
-      <header className={`vc-header ${showControls ? '' : 'vc-header--hidden'}`}>
+      <header className="vc-header">
         {/* Brand & Room ID Pill */}
         <div className="vc-header__left">
           <StudyRoomsBrand size="sm" />
@@ -436,7 +517,18 @@ export default function VideoCall({
 
       {/* ── Floating Controls Dock ── */}
       <div className={`vc-bar ${showControls ? '' : 'vc-bar--hidden'}`}>
-        <div className="vc-bar__inner">
+        <div
+          ref={controlsDockRef}
+          className="vc-bar__inner"
+          onPointerEnter={showControlDock}
+          onPointerLeave={scheduleHideControls}
+          onFocusCapture={showControlDock}
+          onBlurCapture={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) {
+              scheduleHideControls();
+            }
+          }}
+        >
           {/* Tools Menu */}
           <details className="vc-tools" ref={toolsMenuRef}>
             <summary className="vc-btn vc-tools__trigger" aria-label="Open study tools" title="Study Tools">
@@ -537,7 +629,7 @@ export default function VideoCall({
           <span className="vc-bar__divider" />
 
           {/* End Call Button */}
-          <button className="vc-btn vc-btn--end" onClick={onLeaveCall} aria-label="Leave call" title="End Study Session">
+          <button className="vc-btn vc-btn--end" onClick={leaveCall} aria-label="Leave call" title="End Study Session">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 2.59 3.4Z" transform="rotate(135 12 12)" /></svg>
             <span className="vc-btn__label">End</span>
           </button>

@@ -15,6 +15,7 @@ export default function PreJoinLobby({
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [fullscreenError, setFullscreenError] = useState('');
 
   const [displayName, setDisplayName] = useState(() => {
     return localStorage.getItem('sr_display_name') || '';
@@ -51,11 +52,27 @@ export default function PreJoinLobby({
       .catch(console.error);
   };
 
-  const handleJoin = (e) => {
+  const handleJoin = async (e) => {
     e.preventDefault();
     if (displayName.trim()) {
       localStorage.setItem('sr_display_name', displayName.trim());
     }
+
+    if (!document.fullscreenElement) {
+      if (!document.documentElement.requestFullscreen) {
+        setFullscreenError('Fullscreen is not supported by this browser. Use a supported browser to join the call.');
+        return;
+      }
+
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch {
+        setFullscreenError('Fullscreen is required to join the call. Allow fullscreen access and try again.');
+        return;
+      }
+    }
+
+    setFullscreenError('');
     onJoinRoom();
   };
 
@@ -233,6 +250,12 @@ export default function PreJoinLobby({
           {/* ── Join Form Card (Open, Airy, Luxury Glassmorphism) ── */}
           <div className="mt-10 sm:mt-12 w-full p-8 sm:p-10 rounded-3xl bg-slate-900/60 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl ring-1 ring-white/5">
             <form onSubmit={handleJoin} className="flex flex-col">
+              {fullscreenError && (
+                <div className="mb-6 rounded-xl border border-amber-400/30 bg-amber-950/40 px-4 py-3 text-sm text-amber-200" role="alert">
+                  {fullscreenError}
+                </div>
+              )}
+
               {/* Display Name Section */}
               <div className="mb-7 sm:mb-8">
                 <label htmlFor="displayNameInput" className="block text-xs uppercase tracking-wider font-bold text-slate-300 mb-3 flex items-center gap-2">
