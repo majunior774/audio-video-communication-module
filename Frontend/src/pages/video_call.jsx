@@ -200,13 +200,15 @@ export default function VideoCall({
                     onPointerUp={(event) => handleTilePointerUp(event, tileId)}
                     onKeyDown={(event) => handleTileKeyDown(event, tileId)}
                   >
-                    <video
-                      autoPlay
-                      playsInline
-                      ref={(el) => {
-                        if (el && el.srcObject !== stream) el.srcObject = stream;
-                      }}
-                    />
+                    <div className="tile-video-frame">
+                      <video
+                        autoPlay
+                        playsInline
+                        ref={(el) => {
+                          if (el && el.srcObject !== stream) el.srcObject = stream;
+                        }}
+                      />
+                    </div>
                     <span className="remote-label">
                       {source === 'screen'
                         ? `Screen · ${userId.slice(0, 8)}`
@@ -239,13 +241,15 @@ export default function VideoCall({
               }
             }}
           >
-            <video
-              ref={localVideoRef}
-              autoPlay
-              muted
-              playsInline
-              className={cameraFacingMode === 'user' ? 'mirror' : ''}
-            />
+            <div className="tile-video-frame">
+              <video
+                ref={localVideoRef}
+                autoPlay
+                muted
+                playsInline
+                className={cameraFacingMode === 'user' ? 'mirror' : ''}
+              />
+            </div>
             {!hasRemote && <p className="solo-hint">Waiting for others to join…</p>}
             {localCameraExpanded && <span className="tile-expand-hint">Double-tap or press Esc to return</span>}
           </div>
@@ -261,7 +265,9 @@ export default function VideoCall({
               onPointerUp={(event) => handleTilePointerUp(event, 'local:screen')}
               onKeyDown={(event) => handleTileKeyDown(event, 'local:screen')}
             >
-              <video ref={screenVideoRef} autoPlay muted playsInline />
+              <div className="tile-video-frame">
+                <video ref={screenVideoRef} autoPlay muted playsInline />
+              </div>
               <span>You're sharing</span>
               {expandedTile === 'local:screen' && <span className="tile-expand-hint">Double-tap or press Esc to return</span>}
             </div>

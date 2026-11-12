@@ -79,12 +79,6 @@
   position: relative;
 }
 
-.solo-view video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .solo-hint {
   position: absolute;
   bottom: 96px;
@@ -163,10 +157,21 @@
   height: var(--adaptive-tile-height);
 }
 
-.remote-tile video {
+.tile-video-frame {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+}
+
+.tile-video-frame video {
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .remote-label {
@@ -207,12 +212,6 @@
   width: 220px;
 }
 
-.local-pip video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .call-stage--adaptive:not(.call-stage--adaptive-grid) .local-pip {
   right: 16px;
   bottom: 16px;
@@ -228,18 +227,8 @@
   background: #18181b;
 }
 
-.local-grid-tile video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .remote-tile--screen {
   background: #09090b;
-}
-
-.remote-tile--screen video {
-  object-fit: contain;
 }
 
 .call-tile--expanded {
@@ -257,17 +246,6 @@
   background: #050507;
   box-shadow: none;
   cursor: zoom-out;
-}
-
-.call-tile--expanded video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.call-tile--expanded.remote-tile--screen video,
-.call-tile--expanded.local-screen-share-tile video {
-  object-fit: contain;
 }
 
 .call-tile--expanded > .tile-expand-hint {
@@ -309,12 +287,6 @@
   border-radius: 12px;
   background: #09090b;
   box-shadow: 0 8px 26px rgb(0 0 0 / 40%);
-}
-
-.local-screen-share-tile video {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
 }
 
 .local-screen-share-tile span {
