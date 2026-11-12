@@ -207,13 +207,9 @@ export default function Dashboard({ onCreateRoom, onJoinRoom, onBackToHome }) {
   });
 
   return (
-    <div className="relative min-h-screen w-full bg-[#080F1A] text-slate-100 flex flex-col justify-between overflow-x-hidden selection:bg-indigo-500 selection:text-white">
-      {/* Background Ambient Glow */}
-      <div className="pointer-events-none absolute -top-40 right-1/4 w-[650px] h-[380px] bg-gradient-to-b from-indigo-600/15 via-purple-600/10 to-transparent blur-[140px]" />
-      <div className="pointer-events-none absolute top-1/2 -left-36 w-80 h-80 bg-cyan-500/10 blur-[130px]" />
-
+    <div className="sr-light-page sr-dashboard relative min-h-screen w-full flex flex-col justify-between overflow-x-hidden">
       {/* ── Top Header ── */}
-      <header className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between border-b border-white/[0.06] backdrop-blur-sm">
+      <header className="sr-dashboard__header relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between border-b border-white/[0.06]">
         <div className="flex items-center gap-3 sm:gap-4">
           <StudyRoomsBrand size="md" />
           <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800/90 text-[11px] font-semibold text-indigo-300 border border-indigo-500/20">
@@ -291,7 +287,7 @@ export default function Dashboard({ onCreateRoom, onJoinRoom, onBackToHome }) {
       </header>
 
       {/* ── Main Dashboard Content ── */}
-      <main className="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 pt-8 pb-16 flex-1 flex flex-col gap-8">
+      <main className="sr-dashboard__main relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 pt-8 pb-16 flex-1 flex flex-col gap-8">
         {/* Welcome Section & Quick Stats */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -328,11 +324,9 @@ export default function Dashboard({ onCreateRoom, onJoinRoom, onBackToHome }) {
         </div>
 
         {/* ── Action Grid: Launch Room + Join Room ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="sr-dashboard__action-grid grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Card 1: Start Instant Study Room */}
-          <div className="relative p-6 rounded-2xl bg-slate-900/80 border border-white/10 shadow-xl backdrop-blur-md flex flex-col justify-between hover:border-indigo-500/30 transition-all group overflow-hidden">
-            <div className="pointer-events-none absolute -right-10 -bottom-10 w-44 h-44 bg-indigo-600/10 rounded-full blur-2xl group-hover:bg-indigo-600/20 transition-all" />
-
+          <div className="sr-dashboard__card relative p-6 rounded-2xl bg-slate-900/80 border border-white/10 flex flex-col justify-between transition-all group overflow-hidden">
             <div>
               <div className="w-11 h-11 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -343,7 +337,7 @@ export default function Dashboard({ onCreateRoom, onJoinRoom, onBackToHome }) {
                 Instant Study Room
               </h2>
               <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">
-                Spin up a private, collaborative study room with peer-to-peer video, shared vector whiteboard, and synchronized media playback.
+                Create a room for your group, then use video, the shared whiteboard, or synchronized media as you study.
               </p>
             </div>
 
@@ -356,15 +350,13 @@ export default function Dashboard({ onCreateRoom, onJoinRoom, onBackToHome }) {
                 Launch Room Now ➔
               </button>
               <p className="text-[11px] text-slate-400 text-center">
-                Generates a secure random room URL instantly
+                Creates a shareable room link instantly
               </p>
             </div>
           </div>
 
           {/* Card 2: Join with Code or Link */}
-          <div className="relative p-6 rounded-2xl bg-slate-900/80 border border-white/10 shadow-xl backdrop-blur-md flex flex-col justify-between hover:border-cyan-500/30 transition-all group overflow-hidden">
-            <div className="pointer-events-none absolute -right-10 -bottom-10 w-44 h-44 bg-cyan-600/10 rounded-full blur-2xl group-hover:bg-cyan-600/20 transition-all" />
-
+          <div className="sr-dashboard__card relative p-6 rounded-2xl bg-slate-900/80 border border-white/10 flex flex-col justify-between transition-all group overflow-hidden">
             <div>
               <div className="w-11 h-11 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -418,7 +410,7 @@ export default function Dashboard({ onCreateRoom, onJoinRoom, onBackToHome }) {
         </div>
 
         {/* ── Productivity Section: Focus Pomodoro Timer Widget ── */}
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-white/10 shadow-xl backdrop-blur-md">
+        <div className="sr-dashboard__panel sr-dashboard__timer p-6 rounded-2xl bg-slate-900/60 border border-white/10">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
@@ -511,7 +503,7 @@ export default function Dashboard({ onCreateRoom, onJoinRoom, onBackToHome }) {
         </div>
 
         {/* ── Recent Rooms (Client-side localStorage) ── */}
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-white/10 shadow-xl backdrop-blur-md">
+        <div className="sr-dashboard__panel sr-dashboard__recent p-6 rounded-2xl bg-slate-900/60 border border-white/10">
           {/* Header Row */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
@@ -650,7 +642,7 @@ export default function Dashboard({ onCreateRoom, onJoinRoom, onBackToHome }) {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="relative z-10 w-full border-t border-white/[0.05] py-5 px-6 text-center text-xs text-slate-400">
+      <footer className="sr-dashboard__footer relative z-10 w-full border-t border-white/[0.05] py-5 px-6 text-center text-xs text-slate-400">
         StudyRooms Hub • Client-managed session history • Connect. Collaborate. Learn.
       </footer>
     </div>
