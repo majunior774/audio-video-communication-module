@@ -20,6 +20,8 @@
 }
 
 .whiteboard-heading {
+  position: relative;
+  z-index: 21;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -94,6 +96,41 @@
 .whiteboard-presence.is-live .whiteboard-presence-dot {
   background: #4adea8;
   box-shadow: 0 0 10px rgb(74 222 168 / 65%);
+}
+
+.whiteboard-close,
+.watch-together-close {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  pointer-events: auto;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #3a4050;
+  border-radius: 8px;
+  background: #252a35;
+  color: #b7bdcb;
+  font: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.whiteboard-close:hover,
+.watch-together-close:hover {
+  border-color: #596174;
+  background: #303644;
+  color: #ffffff;
+}
+
+.whiteboard-close:focus-visible,
+.watch-together-close:focus-visible {
+  outline: 2px solid #9aa8ff;
+  outline-offset: 2px;
 }
 
 .whiteboard-toolbar {

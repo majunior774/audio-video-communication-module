@@ -76,7 +76,7 @@ function formatTime(seconds) {
   return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
 }
 
-export default function YouTubeWatchTogether({ socket, roomId }) {
+export default function YouTubeWatchTogether({ socket, roomId, onClose }) {
   const [videoInput, setVideoInput] = useState('');
   const [playback, setPlayback] = useState(null);
   const [playerReady, setPlayerReady] = useState(false);
@@ -437,6 +437,18 @@ export default function YouTubeWatchTogether({ socket, roomId }) {
             Shared
           </span>
         )}
+        <button
+          type="button"
+          className="watch-together-close"
+          onClick={(event) => {
+            event.stopPropagation();
+            onClose?.();
+          }}
+          aria-label="Close watch together"
+          title="Close watch together"
+        >
+          ×
+        </button>
       </header>
 
       <form className="watch-together-share" onSubmit={shareVideo}>

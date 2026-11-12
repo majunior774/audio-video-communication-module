@@ -18,6 +18,8 @@
 }
 
 .watch-together-heading {
+  position: relative;
+  z-index: 21;
   display: flex;
   min-height: 60px;
   align-items: center;
@@ -80,6 +82,16 @@
   border-radius: 50%;
   background: #4adea8;
   box-shadow: 0 0 10px rgb(74 222 168 / 65%);
+}
+
+.watch-together-close {
+  border-color: #45404e;
+  background: #2a2631;
+}
+
+.watch-together-close:hover {
+  border-color: #625969;
+  background: #38313e;
 }
 
 .watch-together-share {

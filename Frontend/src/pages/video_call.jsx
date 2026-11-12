@@ -358,8 +358,20 @@ export default function VideoCall({
         </main>
 
         {/* ── side panels ── */}
-        {whiteboardOpen && <Whiteboard socket={socket} roomId={roomId} />}
-        {watchTogetherOpen && <YouTubeWatchTogether socket={socket} roomId={roomId} />}
+        {whiteboardOpen && (
+          <Whiteboard
+            socket={socket}
+            roomId={roomId}
+            onClose={() => setWhiteboardOpen(false)}
+          />
+        )}
+        {watchTogetherOpen && (
+          <YouTubeWatchTogether
+            socket={socket}
+            roomId={roomId}
+            onClose={() => setWatchTogetherOpen(false)}
+          />
+        )}
       </div>
 
       {/* ── bottom control bar ── */}

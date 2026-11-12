@@ -67,7 +67,7 @@ function getObjectText(object) {
   return typeof object.text === 'string' ? object.text : '';
 }
 
-export default function Whiteboard({ socket, roomId }) {
+export default function Whiteboard({ socket, roomId, onClose }) {
   const [tool, setTool] = useState('pen');
   const [color, setColor] = useState(DEFAULT_COLOR);
   const [size, setSize] = useState(4);
@@ -689,6 +689,18 @@ export default function Whiteboard({ socket, roomId }) {
           <span className="whiteboard-presence-dot" />
           {boardReady ? 'Live' : connected ? 'Syncing' : 'Connecting'}
         </div>
+        <button
+          type="button"
+          className="whiteboard-close"
+          onClick={(event) => {
+            event.stopPropagation();
+            onClose?.();
+          }}
+          aria-label="Close whiteboard"
+          title="Close whiteboard"
+        >
+          ×
+        </button>
       </header>
       <div className="whiteboard-toolbar">
         <div className="whiteboard-tools" role="toolbar" aria-label="Whiteboard tools">
