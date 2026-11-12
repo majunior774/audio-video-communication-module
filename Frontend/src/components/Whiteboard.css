@@ -1,10 +1,20 @@
+/* ══════════════════════════════════════════════════
+   StudyRooms — Whiteboard.css
+   Visual harmonization with Deep Navy & Slate design tokens.
+   SVG coordinate math and canvas dimensions preserved 100%.
+   ══════════════════════════════════════════════════ */
+
 .whiteboard {
-  --board-surface: #171a22;
-  --board-surface-raised: #1d212b;
-  --board-border: #2b303d;
-  --board-text: #e8eaf0;
-  --board-muted: #9299aa;
-  --board-accent: #8b9cff;
+  --board-surface: #080F1A;
+  --board-surface-raised: #1E293B;
+  --board-surface-elevated: #0F172A;
+  --board-border: rgba(255, 255, 255, 0.08);
+  --board-text: #F8FAFC;
+  --board-muted: #94A3B8;
+  --board-accent: #6366F1;
+  --board-secondary: #06B6D4;
+  --board-danger: #EF4444;
+
   position: relative;
   display: flex;
   flex: 1;
@@ -13,34 +23,37 @@
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--board-border);
-  border-radius: 16px;
+  border-radius: 18px;
   background: var(--board-surface);
   color: var(--board-text);
-  box-shadow: 0 16px 42px rgb(0 0 0 / 28%);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
 }
+
+/* ── Heading Bar ── */
 
 .whiteboard-heading {
   position: relative;
   z-index: 21;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-height: 60px;
-  padding: 10px 14px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--board-border);
-  background: linear-gradient(110deg, #1d2230, #191c25 72%);
+  background: linear-gradient(110deg, #1E293B 0%, #0F172A 75%);
 }
 
 .whiteboard-heading-mark {
   display: grid;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgb(139 156 255 / 28%);
+  border: 1px solid rgba(99, 102, 241, 0.3);
   border-radius: 10px;
-  background: rgb(111 132 255 / 12%);
-  color: #a9b5ff;
+  background: rgba(99, 102, 241, 0.12);
+  color: #a5b4fc;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
 }
 
 .whiteboard-heading-copy {
@@ -52,10 +65,11 @@
 
 .whiteboard-heading-copy h2 {
   margin: 0;
-  color: #f1f2f7;
-  font-size: 13px;
-  font-weight: 650;
-  letter-spacing: 0.01em;
+  color: #fff;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .whiteboard-heading-copy span {
@@ -71,31 +85,32 @@
   align-items: center;
   gap: 6px;
   margin-left: auto;
-  padding: 5px 9px;
-  border: 1px solid #373b46;
+  padding: 5px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
-  background: #222630;
-  color: #adb2c0;
+  background: rgba(15, 23, 42, 0.8);
+  color: #cbd5e1;
   font-size: 11px;
-  font-weight: 550;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
 }
 
 .whiteboard-presence.is-live {
-  border-color: rgb(52 211 153 / 24%);
-  background: rgb(16 185 129 / 9%);
-  color: #77dfb8;
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
 }
 
 .whiteboard-presence-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #9299aa;
+  background: #64748b;
 }
 
 .whiteboard-presence.is-live .whiteboard-presence-dot {
-  background: #4adea8;
-  box-shadow: 0 0 10px rgb(74 222 168 / 65%);
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
 }
 
 .whiteboard-close,
@@ -133,11 +148,13 @@
   outline-offset: 2px;
 }
 
+/* ── Toolbar ── */
+
 .whiteboard-toolbar {
   display: flex;
   flex-direction: column;
-  gap: 9px;
-  padding: 11px 12px;
+  gap: 10px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--board-border);
   background: var(--board-surface-raised);
 }
@@ -150,104 +167,107 @@
   gap: 6px;
 }
 
+/* ── Color Swatches ── */
+
 .whiteboard-color-swatches {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding-right: 4px;
+  gap: 6px;
+  padding-right: 6px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .whiteboard-color-swatch {
-  width: 19px;
-  height: 19px;
+  width: 20px;
+  height: 20px;
   padding: 0;
-  border: 2px solid #343946;
+  border: 2px solid rgba(255, 255, 255, 0.15);
   border-radius: 50%;
   background: var(--swatch-color);
-  box-shadow: 0 0 0 1px #171a22;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 .whiteboard-color-swatch:hover:not(:disabled) {
-  transform: scale(1.12);
+  transform: scale(1.15);
+  border-color: #fff;
 }
 
 .whiteboard-color-swatch.is-selected {
   border-color: #ffffff;
-  box-shadow: 0 0 0 2px var(--board-accent);
+  box-shadow: 0 0 0 2px var(--board-accent), 0 0 10px rgba(99, 102, 241, 0.4);
+  transform: scale(1.08);
 }
 
 .whiteboard-color-swatch:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* ── Tool Buttons ── */
 
 .whiteboard-tool,
 .whiteboard-action {
   display: inline-flex;
-  min-height: 33px;
+  min-height: 32px;
   align-items: center;
   justify-content: center;
-  padding: 6px 10px;
-  border: 1px solid transparent;
+  padding: 5px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
-  background: transparent;
-  color: #b7bdcb;
+  background: rgba(15, 23, 42, 0.5);
+  color: #cbd5e1;
   font: inherit;
   font-size: 11px;
-  font-weight: 550;
+  font-weight: 600;
   cursor: pointer;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease,
-    transform 0.15s ease;
+  transition: all 0.15s ease;
 }
 
 .whiteboard-tool:hover:not(:disabled),
 .whiteboard-action:hover:not(:disabled) {
-  border-color: #3a4050;
-  background: #292e3a;
-  color: #f1f2f7;
+  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(30, 41, 59, 0.9);
+  color: #fff;
 }
 
 .whiteboard-tool:active:not(:disabled),
 .whiteboard-action:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
 .whiteboard-tool.is-active {
-  border-color: rgb(139 156 255 / 38%);
-  background: rgb(111 132 255 / 15%);
-  color: #bdc7ff;
-  box-shadow: inset 0 0 0 1px rgb(139 156 255 / 5%);
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(99, 102, 241, 0.2);
+  color: #c7d2fe;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
 }
 
 .whiteboard-tool:disabled,
 .whiteboard-action:disabled {
-  opacity: 0.42;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
 .whiteboard-action {
   min-width: 48px;
-  border-color: #353a48;
-  background: #252a35;
-  color: #d3d6e0;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.7);
+  color: #e2e8f0;
 }
 
 .whiteboard-action.is-danger {
   margin-left: auto;
-  border-color: rgb(248 113 113 / 22%);
-  background: rgb(239 68 68 / 8%);
-  color: #f0929a;
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
 }
 
 .whiteboard-action.is-danger:hover:not(:disabled) {
-  border-color: rgb(248 113 113 / 42%);
-  background: rgb(239 68 68 / 16%);
-  color: #ffb1b5;
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.22);
+  color: #fff;
 }
 
 .whiteboard-setting {
@@ -260,12 +280,12 @@
 }
 
 .whiteboard-setting input[type='color'] {
-  width: 27px;
-  height: 27px;
-  padding: 3px;
-  border: 1px solid #3a4050;
+  width: 28px;
+  height: 28px;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 7px;
-  background: #252a35;
+  background: #0f172a;
   cursor: pointer;
 }
 
@@ -279,43 +299,48 @@
 }
 
 .whiteboard-size input {
-  width: 82px;
-  accent-color: #8b9cff;
+  width: 86px;
+  accent-color: var(--board-accent);
   cursor: pointer;
 }
 
 .whiteboard-size span {
   min-width: 18px;
-  color: #d3d6e0;
+  color: #e2e8f0;
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
+/* ── Error & Sync Overlays ── */
+
 .whiteboard-error {
-  z-index: 3;
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 12px;
-  border-bottom: 1px solid rgb(248 113 113 / 22%);
-  background: #311f29;
-  color: #ff9a9f;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(45, 15, 20, 0.95);
+  color: #fca5a5;
   font-size: 12px;
 }
 
 .whiteboard-sync-status {
   position: absolute;
-  z-index: 2;
+  z-index: 4;
   top: 50%;
   left: 50%;
-  padding: 10px 14px;
-  border: 1px solid #454b59;
-  border-radius: 10px;
-  background: rgb(29 33 43 / 94%);
-  color: #d1d5e0;
+  padding: 12px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.92);
+  color: #e2e8f0;
   font-size: 12px;
+  font-weight: 500;
   transform: translate(-50%, -50%);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 28%);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
 }
 
 .whiteboard-error button {
@@ -326,14 +351,16 @@
   cursor: pointer;
 }
 
+/* ── Canvas Workspace Frame ── */
+
 .whiteboard-canvas-wrap {
   position: relative;
   flex: 1;
   min-height: 0;
   overflow: hidden;
   background:
-    radial-gradient(ellipse at 50% 35%, rgb(255 255 255 / 3%), transparent 75%),
-    #12151c;
+    radial-gradient(ellipse at 50% 35%, rgba(99, 102, 241, 0.04) 0%, transparent 75%),
+    #0a1120;
 }
 
 .whiteboard-canvas,
@@ -374,12 +401,14 @@
   pointer-events: none;
 }
 
+/* ── Text and Sticky Notes Objects ── */
+
 .whiteboard-object-text {
   width: 100%;
   height: 100%;
   overflow: hidden;
   color: #18181b;
-  font: 16px/1.35 system-ui, sans-serif;
+  font: 16px/1.35 'Inter', system-ui, sans-serif;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   user-select: none;
@@ -387,46 +416,50 @@
 
 .whiteboard-object-text.is-sticky {
   font-size: 15px;
+  font-weight: 500;
 }
+
+/* ── Text Editor Floating Modal ── */
 
 .whiteboard-text-editor {
   position: absolute;
-  z-index: 4;
+  z-index: 6;
   display: flex;
-  min-width: 180px;
-  min-height: 100px;
+  min-width: 200px;
+  min-height: 110px;
   flex-direction: column;
-  gap: 7px;
+  gap: 8px;
   box-sizing: border-box;
-  padding: 8px;
-  border: 1px solid #7183f0;
-  border-radius: 10px;
-  background: rgb(27 31 42 / 96%);
-  color: #e8eaf0;
-  box-shadow: 0 8px 26px rgb(0 0 0 / 38%), 0 0 0 2px rgb(135 152 255 / 13%);
-  backdrop-filter: blur(10px);
+  padding: 10px;
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.95);
+  color: #f8fafc;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(99, 102, 241, 0.15);
+  backdrop-filter: blur(14px);
 }
 
 .whiteboard-text-editor.is-sticky {
-  border-color: #e2c34f;
-  background: rgb(254 240 138 / 97%);
-  color: #27220f;
+  border-color: #f59e0b;
+  background: rgba(254, 240, 138, 0.98);
+  color: #1c1917;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(245, 158, 11, 0.2);
 }
 
 .whiteboard-text-editor-toolbar {
   display: flex;
-  min-height: 25px;
+  min-height: 26px;
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  color: #aeb8ff;
+  color: #a5b4fc;
   font-size: 10px;
-  font-weight: 650;
+  font-weight: 700;
   letter-spacing: 0.02em;
 }
 
 .whiteboard-text-editor.is-sticky .whiteboard-text-editor-toolbar {
-  color: #6f5f20;
+  color: #78350f;
 }
 
 .whiteboard-text-size-control {
@@ -434,16 +467,16 @@
   height: 24px;
   align-items: center;
   gap: 2px;
-  padding: 0 3px;
-  border: 1px solid #3c4352;
+  padding: 0 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 6px;
-  background: #171b24;
-  color: #d7dbea;
+  background: #0f172a;
+  color: #e2e8f0;
 }
 
 .whiteboard-text-size-control button {
   display: grid;
-  width: 21px;
+  width: 22px;
   height: 20px;
   place-items: center;
   border: 0;
@@ -455,7 +488,7 @@
 }
 
 .whiteboard-text-size-control button:hover:not(:disabled) {
-  background: #343b4c;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .whiteboard-text-size-control button:disabled {
@@ -468,12 +501,13 @@
   text-align: center;
   font-size: 10px;
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 .whiteboard-text-editor.is-sticky .whiteboard-text-size-control {
-  border-color: rgb(111 95 32 / 28%);
-  background: rgb(255 248 194 / 80%);
-  color: #433a1a;
+  border-color: rgba(120, 53, 15, 0.25);
+  background: rgba(255, 251, 235, 0.9);
+  color: #451a03;
 }
 
 .whiteboard-text-input {
@@ -481,32 +515,32 @@
   width: 100%;
   min-height: 0;
   box-sizing: border-box;
-  padding: 4px 5px;
+  padding: 6px;
   border: 0;
-  border-radius: 4px;
+  border-radius: 6px;
   outline: none;
   background: transparent;
-  color: var(--text-editor-color, #f1f2f7);
-  font: 500 var(--text-editor-font-size, 24px)/1.35 system-ui, sans-serif;
+  color: var(--text-editor-color, #f8fafc);
+  font: 500 var(--text-editor-font-size, 24px)/1.35 'Inter', system-ui, sans-serif;
   resize: none;
 }
 
 .whiteboard-text-input::placeholder {
-  color: #777f91;
+  color: #64748b;
   opacity: 0.85;
 }
 
 .whiteboard-text-editor.is-sticky .whiteboard-text-input {
-  color: #27220f;
+  color: #1c1917;
 }
 
 .whiteboard-text-editor.is-sticky .whiteboard-text-input::placeholder {
-  color: #76692f;
+  color: #78716c;
 }
 
 .whiteboard-text-editor-footer {
   display: flex;
-  min-height: 27px;
+  min-height: 28px;
   align-items: flex-end;
   justify-content: space-between;
   gap: 6px;
@@ -514,45 +548,49 @@
 
 .whiteboard-text-editor-footer > span {
   align-self: center;
-  color: #8f98aa;
+  color: #94a3b8;
   font-size: 9px;
 }
 
 .whiteboard-text-editor.is-sticky .whiteboard-text-editor-footer > span {
-  color: #776a32;
+  color: #78350f;
 }
 
 .whiteboard-text-editor-actions {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .whiteboard-text-cancel,
 .whiteboard-text-save {
-  min-height: 25px;
-  padding: 4px 8px;
-  border: 1px solid #3b4251;
+  min-height: 26px;
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
-  background: #292e3a;
-  color: #cbd0dc;
+  background: rgba(30, 41, 59, 0.8);
+  color: #e2e8f0;
   font: inherit;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  transition: all 0.15s ease;
 }
 
-.whiteboard-text-cancel:hover,
-.whiteboard-text-save:hover:not(:disabled) {
-  border-color: #51596b;
-  background: #333948;
+.whiteboard-text-cancel:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }
 
 .whiteboard-text-save {
-  border-color: #7d8fff;
-  background: #8798ff;
-  color: #111522;
+  border-color: rgba(99, 102, 241, 0.4);
+  background: var(--board-accent);
+  color: #fff;
+}
+
+.whiteboard-text-save:hover:not(:disabled) {
+  background: #4f46e5;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
 }
 
 .whiteboard-text-save:disabled {
@@ -562,24 +600,24 @@
 
 .whiteboard-text-resize-handle {
   position: absolute;
-  right: 1px;
-  bottom: 1px;
+  right: 2px;
+  bottom: 2px;
   width: 16px;
   height: 16px;
   padding: 0;
   border: 0;
-  border-radius: 0 0 8px 0;
+  border-radius: 0 0 10px 0;
   background:
-    linear-gradient(135deg, transparent 46%, #8998ff 48%, #8998ff 55%, transparent 57%),
-    linear-gradient(135deg, transparent 66%, #8998ff 68%, #8998ff 75%, transparent 77%);
+    linear-gradient(135deg, transparent 46%, var(--board-accent) 48%, var(--board-accent) 55%, transparent 57%),
+    linear-gradient(135deg, transparent 66%, var(--board-accent) 68%, var(--board-accent) 75%, transparent 77%);
   cursor: nwse-resize;
   touch-action: none;
 }
 
 .whiteboard-text-editor.is-sticky .whiteboard-text-resize-handle {
   background:
-    linear-gradient(135deg, transparent 46%, #9b8428 48%, #9b8428 55%, transparent 57%),
-    linear-gradient(135deg, transparent 66%, #9b8428 68%, #9b8428 75%, transparent 77%);
+    linear-gradient(135deg, transparent 46%, #b45309 48%, #b45309 55%, transparent 57%),
+    linear-gradient(135deg, transparent 66%, #b45309 68%, #b45309 75%, transparent 77%);
 }
 
 .whiteboard-tool:focus-visible,
@@ -588,37 +626,39 @@
 .whiteboard-setting input:focus-visible,
 .whiteboard-error button:focus-visible,
 .whiteboard-text-editor button:focus-visible {
-  outline: 2px solid #9aa8ff;
+  outline: 2px solid var(--board-accent);
   outline-offset: 2px;
 }
 
+/* ── Mobile Breakpoint ── */
+
 @media (max-width: 600px) {
   .whiteboard {
-    border-radius: 12px;
+    border-radius: 14px;
   }
 
   .whiteboard-heading {
-    min-height: 54px;
-    padding: 8px 10px;
+    min-height: 52px;
+    padding: 8px 12px;
   }
 
   .whiteboard-toolbar {
-    gap: 7px;
-    padding: 8px;
+    gap: 8px;
+    padding: 8px 10px;
   }
 
   .whiteboard-tool,
   .whiteboard-action {
-    min-height: 31px;
-    padding: 5px 8px;
+    min-height: 30px;
+    padding: 4px 8px;
     font-size: 10px;
   }
 
   .whiteboard-size input {
-    width: 66px;
+    width: 68px;
   }
 
   .whiteboard-text-editor-footer {
-    gap: 3px;
+    gap: 4px;
   }
 }

@@ -1,17 +1,82 @@
 @import "tailwindcss";
 
-/* ── Base reset ── */
+/* ══════════════════════════════════════════════════
+   StudyRooms — Global Design Tokens & Typography
+   ══════════════════════════════════════════════════ */
+
+:root {
+  /* Brand Palette */
+  --sr-bg: #080F1A;                  /* Deep Navy */
+  --sr-surface-subtle: #0F172A;       /* Subtle dark surface */
+  --sr-surface: #1E293B;              /* Slate surface for cards and panels */
+  --sr-surface-hover: #26334D;
+  --sr-surface-active: #334155;
+
+  /* Accents */
+  --sr-primary: #6366F1;              /* Electric Indigo */
+  --sr-primary-hover: #4F46E5;
+  --sr-secondary: #06B6D4;            /* Cyan */
+  --sr-secondary-hover: #0891B2;
+  --sr-accent: #A855F7;               /* Purple / Violet */
+  --sr-danger: #EF4444;               /* Crimson */
+  --sr-danger-hover: #DC2626;
+  --sr-success: #10B981;              /* Emerald */
+
+  /* Text & Contrast */
+  --sr-text-primary: #F8FAFC;
+  --sr-text-secondary: #94A3B8;
+  --sr-text-muted: #64748B;
+
+  /* Glassmorphism & Borders */
+  --sr-border: rgba(255, 255, 255, 0.08);
+  --sr-border-focus: rgba(99, 102, 241, 0.5);
+  --sr-glass-bg: rgba(30, 41, 59, 0.72);
+  --sr-glass-blur: blur(20px);
+
+  /* Shadows */
+  --sr-shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.35);
+  --sr-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --sr-glow-indigo: 0 0 24px rgba(99, 102, 241, 0.25);
+  --sr-glow-cyan: 0 0 24px rgba(6, 182, 212, 0.25);
+
+  /* Radii */
+  --sr-radius-sm: 8px;
+  --sr-radius-md: 14px;
+  --sr-radius-lg: 20px;
+  --sr-radius-full: 9999px;
+
+  /* Transitions */
+  --sr-transition-fast: 0.15s ease;
+  --sr-transition-normal: 0.25s ease;
+}
+
+/* ── Typography Utility Classes ── */
+.sr-font-heading {
+  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.sr-font-body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ── Base Reset & Layout ── */
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
+  min-height: 100dvh;
+  background-color: var(--sr-bg);
+  color: var(--sr-text-primary);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   overflow: hidden;
-  background: #0a0a0a;
-  color: #e8e8ec;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
   width: 100%;
   height: 100%;
+  min-height: 100dvh;
 }
