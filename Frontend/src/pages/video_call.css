@@ -217,7 +217,6 @@
 .vc-solo .vc-tile__frame video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
 }
 
 .vc-solo__overlay {
@@ -347,12 +346,46 @@
   justify-content: center;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
+  background: #0c0d15;
+  isolation: isolate;
+}
+
+.vc-tile__frame::before,
+.vc-tile__frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.vc-tile__frame::before {
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(99, 102, 241, 0.14), transparent 58%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.035), transparent 45%);
+}
+
+.vc-tile__frame::after {
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 32px rgba(0, 0, 0, 0.18);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .vc-tile__frame video {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+.vc-tile:hover > .vc-tile__frame::after,
+.vc-pip:hover > .vc-tile__frame::after,
+.vc-local-grid:hover > .vc-tile__frame::after,
+.vc-screen-preview:hover > .vc-tile__frame::after {
+  border-color: rgba(165, 167, 255, 0.48);
+  box-shadow: inset 0 0 36px rgba(99, 102, 241, 0.1);
 }
 
 .vc-tile__label {
@@ -452,10 +485,6 @@
 
 .vc-main--panels .vc-pip {
   bottom: 16px;
-}
-
-.vc-pip .vc-tile__frame video {
-  object-fit: cover;
 }
 
 .vc-pip__badge {
