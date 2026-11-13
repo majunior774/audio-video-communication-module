@@ -91,8 +91,15 @@
   font-size: 14px;
 }
 
-.vc-fullscreen-gate__card button {
+.vc-fullscreen-gate__actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-top: 22px;
+}
+
+.vc-fullscreen-gate__card button {
   padding: 12px 20px;
   border: 0;
   border-radius: 12px;
@@ -101,6 +108,11 @@
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+}
+
+.vc-fullscreen-gate__card .vc-fullscreen-gate__exit {
+  background: var(--sr-surface);
+  color: var(--sr-text);
 }
 
 /* ════════════════════════════════════════════
@@ -213,6 +225,17 @@
   font-variant-numeric: tabular-nums;
   color: #e2e8f0;
   letter-spacing: 0.02em;
+}
+
+.vc-header__focus-time {
+  margin-left: 6px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  color: #a5b4fc;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .vc-header__count {

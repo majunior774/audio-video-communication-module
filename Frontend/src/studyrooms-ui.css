@@ -983,6 +983,10 @@
   box-shadow: 0 14px 34px rgba(32, 47, 42, 0.14) !important;
 }
 
+.sr-lobby__status-badge {
+  padding: 8px 10px !important;
+}
+
 .sr-lobby__preview > div:last-child {
   gap: 10px !important;
   padding: 9px 12px !important;

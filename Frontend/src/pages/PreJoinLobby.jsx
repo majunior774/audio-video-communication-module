@@ -134,7 +134,7 @@ export default function PreJoinLobby({
 
             {/* Top Left Status Badge */}
             <div className="absolute top-5 left-5 flex items-center gap-2">
-              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/80 border border-white/10 text-xs font-semibold text-slate-200 backdrop-blur-md shadow-md">
+              <div className="sr-lobby__status-badge flex items-center gap-2 rounded-full bg-slate-950/80 border border-white/10 text-xs font-semibold text-slate-200 backdrop-blur-md shadow-md">
                 <span className={`w-2 h-2 rounded-full ${camOn && cameraReady ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-slate-500'}`} />
                 <span>{camOn && cameraReady ? 'Preview Active' : 'Camera Off'}</span>
               </div>
@@ -198,9 +198,9 @@ export default function PreJoinLobby({
               <button
                 type="button"
                 onClick={onSwitchCamera}
-                disabled={!cameraReady || cameraSwitching}
+                disabled={!camOn || !cameraReady || cameraSwitching}
                 className="w-12 h-12 rounded-xl bg-slate-800/90 text-slate-100 hover:bg-slate-700/90 disabled:opacity-40 border border-white/10 hover:border-white/20 hover:scale-105 active:scale-95 flex items-center justify-center transition-all cursor-pointer"
-                title={`Switch Camera (Currently: ${cameraFacingMode})`}
+                title={camOn ? `Switch Camera (Currently: ${cameraFacingMode})` : 'Turn the camera on to switch cameras'}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" />

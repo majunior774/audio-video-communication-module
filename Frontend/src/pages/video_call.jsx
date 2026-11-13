@@ -70,12 +70,21 @@ export default function VideoCall({
   onStartScreenShare,
   onStopScreenShare,
   onLeaveCall,
+  focusTimeLeft,
+  focusTimerRunning,
+  onStartFocusTimer,
 }) {
   const [localExpanded, setLocalExpanded] = useState(false);
   const [expandedTile, setExpandedTile] = useState(null);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
+
+  useEffect(() => {
+    const videoTrack = localVideoRef.current?.srcObject?.getVideoTracks()[0];
+    if (videoTrack) setCamOn(videoTrack.enabled);
+  }, [localVideoRef]);
   const [isFullscreen, setIsFullscreen] = useState(() => Boolean(document.fullscreenElement));
+  const [focusModeActive, setFocusModeActive] = useState(false);
   const [fullscreenError, setFullscreenError] = useState('');
   const [showControls, setShowControls] = useState(true);
   const [whiteboardOpen, setWhiteboardOpen] = useState(false);
@@ -222,7 +231,27 @@ export default function VideoCall({
       await document.documentElement.requestFullscreen();
       setFullscreenError('');
     } catch {
-      setFullscreenError('Fullscreen is required for this call. Allow fullscreen access and try again.');
+      setFullscreenError('Allow fullscreen access to continue Focus Mode.');
+    }
+  };
+
+  const exitFocusMode = () => {
+    setFocusModeActive(false);
+    if (toolsMenuRef.current) toolsMenuRef.current.open = false;
+  };
+
+  const startFocusMode = async () => {
+    if (toolsMenuRef.current) toolsMenuRef.current.open = false;
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+      setFullscreenError('');
+      setFocusModeActive(true);
+      onStartFocusTimer();
+    } catch (error) {
+      console.error('Unable to enter fullscreen focus mode:', error);
+      setFullscreenError('Unable to enter fullscreen. Allow fullscreen access and try again.');
     }
   };
 
@@ -318,6 +347,9 @@ export default function VideoCall({
 
   const localCameraTileId = 'local:camera';
   const localCameraExpanded = expandedTile === localCameraTileId;
+  const focusTimeDisplay = `${String(Math.floor(focusTimeLeft / 60)).padStart(2, '0')}:${String(
+    focusTimeLeft % 60
+  ).padStart(2, '0')}`;
 
   return (
     <div
@@ -325,13 +357,18 @@ export default function VideoCall({
       onPointerMove={handlePointerMove}
       onPointerDown={handlePointerDown}
     >
-      {!isFullscreen && (
+      {focusModeActive && !isFullscreen && (
         <div className="vc-fullscreen-gate" role="dialog" aria-modal="true" aria-labelledby="vc-fullscreen-title">
           <div className="vc-fullscreen-gate__card">
-            <h1 id="vc-fullscreen-title">Fullscreen required</h1>
-            <p>Return to fullscreen to continue your study session.</p>
+            <h1 id="vc-fullscreen-title">Fullscreen required for Focus Mode</h1>
+            <p>Return to fullscreen or exit Focus Mode to continue your call windowed.</p>
             {fullscreenError && <p className="vc-fullscreen-gate__error" role="alert">{fullscreenError}</p>}
-            <button type="button" onClick={returnToFullscreen}>Return to fullscreen</button>
+            <div className="vc-fullscreen-gate__actions">
+              <button type="button" onClick={returnToFullscreen}>Return to fullscreen</button>
+              <button type="button" className="vc-fullscreen-gate__exit" onClick={exitFocusMode}>
+                Exit Focus Mode
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -367,6 +404,11 @@ export default function VideoCall({
         <div className="vc-header__center">
           <span className="vc-header__dot" />
           <span className="vc-header__time">{elapsed}</span>
+          {(focusTimerRunning || focusTimeLeft === 0) && (
+            <span className="vc-header__focus-time" role="timer" aria-live="polite">
+              {focusTimerRunning ? `Focus ${focusTimeDisplay}` : 'Focus complete'}
+            </span>
+          )}
         </div>
 
         {/* Right: Participant Count Badge */}
@@ -543,6 +585,21 @@ export default function VideoCall({
             <div className="vc-tools__dropdown" role="group" aria-label="Study tools">
               <button
                 type="button"
+                className={`vc-tools__option ${focusModeActive ? 'vc-tools__option--active' : ''}`}
+                onClick={focusModeActive ? exitFocusMode : startFocusMode}
+                aria-pressed={focusModeActive}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7v5l3 2" />
+                </svg>
+                <span>{focusModeActive ? 'Exit Focus Mode' : 'Focus Mode'}</span>
+                <span className="vc-tools__status">
+                  {focusModeActive ? 'On' : focusTimerRunning ? 'Running' : focusTimeLeft === 0 ? 'Restart' : 'Start'}
+                </span>
+              </button>
+              <button
+                type="button"
                 className={`vc-tools__option ${whiteboardOpen ? 'vc-tools__option--active' : ''}`}
                 onClick={() => { setWhiteboardOpen((o) => !o); toolsMenuRef.current.open = false; }}
                 aria-pressed={whiteboardOpen}
@@ -618,9 +675,9 @@ export default function VideoCall({
           <button
             className="vc-btn"
             onClick={onSwitchCamera}
-            disabled={!cameraReady || cameraSwitching}
+            disabled={!camOn || !cameraReady || cameraSwitching}
             aria-label="Switch camera"
-            title={`Switch Camera (Currently: ${cameraFacingMode})`}
+            title={camOn ? `Switch Camera (Currently: ${cameraFacingMode})` : 'Turn the camera on to switch cameras'}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" /><path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5" /><circle cx="12" cy="12" r="3" /><path d="m18 22-3-3 3-3" /><path d="m6 2 3 3-3 3" /></svg>
             <span className="vc-btn__label">Flip</span>

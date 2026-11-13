@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import StudyRoomsBrand from '../components/StudyRoomsBrand';
 
 const TIMER_MODES = [
@@ -22,7 +22,17 @@ function formatRelativeTime(timestamp) {
   return new Date(timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-export default function Dashboard({ onCreateRoom, onJoinRoom, onBackToHome }) {
+export default function Dashboard({
+  onCreateRoom,
+  onJoinRoom,
+  onBackToHome,
+  timerMode,
+  timeLeft,
+  timerRunning,
+  onSelectTimerMode,
+  onToggleTimer,
+  onResetTimer,
+}) {
   // Join room form state
   const [roomInput, setRoomInput] = useState('');
   const [inputError, setInputError] = useState('');
@@ -46,49 +56,6 @@ export default function Dashboard({ onCreateRoom, onJoinRoom, onBackToHome }) {
       return [];
     }
   });
-
-  // Pomodoro Focus Timer State
-  const [timerMode, setTimerMode] = useState('focus25');
-  const [timeLeft, setTimeLeft] = useState(25 * 60);
-  const [timerRunning, setTimerRunning] = useState(false);
-
-  // Focus Timer interval effect
-  useEffect(() => {
-    if (!timerRunning) return;
-    const interval = window.setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          setTimerRunning(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => window.clearInterval(interval);
-  }, [timerRunning]);
-
-  const handleSelectTimerMode = (mode) => {
-    setTimerMode(mode.id);
-    setTimeLeft(mode.minutes * 60);
-    setTimerRunning(false);
-  };
-
-  const handleToggleTimer = () => {
-    if (timeLeft === 0) {
-      const selected = TIMER_MODES.find((m) => m.id === timerMode) || TIMER_MODES[0];
-      setTimeLeft(selected.minutes * 60);
-      setTimerRunning(true);
-    } else {
-      setTimerRunning((prev) => !prev);
-    }
-  };
-
-  const handleResetTimer = () => {
-    setTimerRunning(false);
-    const selected = TIMER_MODES.find((m) => m.id === timerMode) || TIMER_MODES[0];
-    setTimeLeft(selected.minutes * 60);
-  };
 
   const formatTimerMinutes = Math.floor(timeLeft / 60);
   const formatTimerSeconds = timeLeft % 60;
@@ -440,7 +407,7 @@ export default function Dashboard({ onCreateRoom, onJoinRoom, onBackToHome }) {
                 <button
                   key={mode.id}
                   type="button"
-                  onClick={() => handleSelectTimerMode(mode)}
+                  onClick={() => onSelectTimerMode(mode)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                     timerMode === mode.id
                       ? 'bg-indigo-600 text-white shadow-sm'
@@ -480,7 +447,7 @@ export default function Dashboard({ onCreateRoom, onJoinRoom, onBackToHome }) {
             <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
               <button
                 type="button"
-                onClick={handleToggleTimer}
+                onClick={onToggleTimer}
                 className={`flex-1 md:flex-initial px-5 py-2.5 rounded-xl font-semibold text-xs tracking-wide transition-all shadow-md active:scale-95 cursor-pointer ${
                   timerRunning
                     ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40'
@@ -492,7 +459,7 @@ export default function Dashboard({ onCreateRoom, onJoinRoom, onBackToHome }) {
 
               <button
                 type="button"
-                onClick={handleResetTimer}
+                onClick={onResetTimer}
                 className="px-3.5 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 border border-white/10 text-xs font-semibold transition-all active:scale-95 cursor-pointer"
                 title="Reset timer"
               >

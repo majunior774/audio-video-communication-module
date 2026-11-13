@@ -137,6 +137,25 @@ function App() {
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraSwitching, setCameraSwitching] = useState(false);
   const [cameraError, setCameraError] = useState('');
+  const [focusTimerMode, setFocusTimerMode] = useState('focus25');
+  const [focusTimerDuration, setFocusTimerDuration] = useState(25 * 60);
+  const [focusTimeLeft, setFocusTimeLeft] = useState(25 * 60);
+  const [focusTimerRunning, setFocusTimerRunning] = useState(false);
+
+  useEffect(() => {
+    if (!focusTimerRunning) return;
+    const interval = window.setInterval(() => {
+      setFocusTimeLeft((previous) => {
+        if (previous <= 1) {
+          setFocusTimerRunning(false);
+          return 0;
+        }
+        return previous - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [focusTimerRunning]);
 
   // Signalling Server URL
   const serverUrl = import.meta.env.DEV
@@ -461,6 +480,7 @@ function App() {
       setCameraError('The camera is not ready yet.');
       return;
     }
+    if (!currentVideoTrack.enabled) return;
 
     cameraSwitchInProgressRef.current = true;
     setCameraSwitching(true);
@@ -928,6 +948,29 @@ function App() {
     setCurrentView('dashboard');
   }, []);
 
+  const selectFocusTimerMode = (mode) => {
+    const duration = mode.minutes * 60;
+    setFocusTimerMode(mode.id);
+    setFocusTimerDuration(duration);
+    setFocusTimeLeft(duration);
+    setFocusTimerRunning(false);
+  };
+
+  const toggleFocusTimer = () => {
+    if (focusTimeLeft === 0) setFocusTimeLeft(focusTimerDuration);
+    setFocusTimerRunning((running) => !running);
+  };
+
+  const resetFocusTimer = () => {
+    setFocusTimerRunning(false);
+    setFocusTimeLeft(focusTimerDuration);
+  };
+
+  const startFocusTimer = () => {
+    if (focusTimeLeft === 0) setFocusTimeLeft(focusTimerDuration);
+    setFocusTimerRunning(true);
+  };
+
   // ─── View Router Render ───
   if (currentView === 'landing') {
     return (
@@ -945,6 +988,12 @@ function App() {
         onCreateRoom={handleCreateRoom}
         onJoinRoom={handleJoinRoom}
         onBackToHome={() => setCurrentView('landing')}
+        timerMode={focusTimerMode}
+        timeLeft={focusTimeLeft}
+        timerRunning={focusTimerRunning}
+        onSelectTimerMode={selectFocusTimerMode}
+        onToggleTimer={toggleFocusTimer}
+        onResetTimer={resetFocusTimer}
       />
     );
   }
@@ -981,6 +1030,9 @@ function App() {
       onStartScreenShare={startScreenShare}
       onStopScreenShare={stopScreenShare}
       onLeaveCall={handleLeaveMeeting}
+      focusTimeLeft={focusTimeLeft}
+      focusTimerRunning={focusTimerRunning}
+      onStartFocusTimer={startFocusTimer}
     />
   );
 }
